@@ -1228,7 +1228,14 @@
     }
     
     function saveProductsToStorage() {
-      localStorage.setItem('products', JSON.stringify(products));
+      // Save to server
+      fetch('/api/save-products', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({products: products})
+      }).then(r => r.json()).then(d => {
+        if (!d.success) console.error('Save failed:', d.error);
+      }).catch(e => console.error('Save error:', e));
     }
     
     function handleFileUpload(event) {
@@ -1353,6 +1360,7 @@
       custom = custom.filter(p => p.code !== code);
       localStorage.setItem('custom_products', JSON.stringify(custom));
       
+      saveProductsToStorage();
       renderProductList(products);
       alert('产品已删除');
     }
@@ -1424,17 +1432,21 @@
       }
       
       // 处理图片上传
-      let imagePath = '';
       if (imageFile) {
-        // 读取图片为 base64
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          imagePath = e.target.result;
-          saveNewProduct(code, name, price, box, length, width, height, weight, inland, profit, link, imagePath);
-        };
-        reader.readAsDataURL(imageFile);
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        fetch('/api/upload-image', {method: 'POST', body: formData})
+          .then(r => r.json())
+          .then(d => {
+            if (d.success) {
+              saveNewProduct(code, name, price, box, length, width, height, weight, inland, profit, link, d.path);
+            } else {
+              alert('图片上传失败: ' + d.error);
+            }
+          })
+          .catch(e => alert('上传失败: ' + e));
       } else {
-        saveNewProduct(code, name, price, box, length, width, height, weight, inland, profit, link, imagePath);
+        saveNewProduct(code, name, price, box, length, width, height, weight, inland, profit, link, '');
       }
     }
     
@@ -1530,25 +1542,31 @@
       // 处理图片上传
       const imageFile = document.getElementById('editImage').files[0];
       if (imageFile) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          product.image = e.target.result;
-          finishEdit();
-        };
-        reader.readAsDataURL(imageFile);
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        fetch('/api/upload-image', {method: 'POST', body: formData})
+          .then(r => r.json())
+          .then(d => {
+            if (d.success) {
+              product.image = d.path;
+            }
+            finishEdit();
+          })
+          .catch(e => { alert('图片上传失败: ' + e); finishEdit(); });
       } else {
         finishEdit();
       }
     }
     
     function finishEdit() {
-      // 保存到 localStorage
+      // Save to server
+      saveProductsToStorage();
+      
+      // Also save to localStorage as backup
       const customProducts = products.filter(p => !PRODUCTS_DATA.some(pd => pd.code === p.code));
       localStorage.setItem('custom_products', JSON.stringify(customProducts));
       
-      // 重新渲染
       renderProductList(products);
-      
       hideEditProduct();
       alert('产品修改成功！');
     }
@@ -1560,12 +1578,7 @@
       loadCustomProducts();
       renderProductList(products);
       
-      // 注册 Service Worker
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW registered'))
-          .catch(err => console.log('SW registration failed'));
-      }
+      // Service Worker removed
     };
   </script>
 </body>
