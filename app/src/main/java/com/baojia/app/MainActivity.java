@@ -53,6 +53,7 @@ public class MainActivity extends Activity {
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         
         // Enable localStorage
         String databasePath = webView.getContext().getDir("database", MODE_PRIVATE).getPath();
