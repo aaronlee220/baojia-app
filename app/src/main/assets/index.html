@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="运费精算">
-  <!-- manifest removed for APK -->
+  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjMyIiBmaWxsPSIjMDA3YWZmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWkiIGZvbnQtc2l6ZT0iNjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+TvjwvdGV4dD48L3N2Zz4=">
   <title>中国发马来西亚 - 运费精算专家</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -349,7 +349,7 @@
     .search-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 8px;
       margin-bottom: 0;
     }
     
@@ -488,79 +488,109 @@
     /* 移动端适配 */
     @media (max-width: 768px) {
       .container { 
-        padding: 12px 10px; 
+        padding: 10px 8px; 
       }
       .header h1 {
-        font-size: 20px;
+        font-size: 18px;
+      }
+      .header p {
+        font-size: 11px;
       }
       .form-grid { 
         grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        gap: 6px;
       }
       .form-group.full-width {
         grid-column: 1 / -1;
       }
       .form-group input, .form-group select {
-        padding: 8px 10px;
-        font-size: 13px;
-        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: 12px;
+        border-radius: 6px;
       }
       .form-group label {
-        font-size: 12px;
-        margin-bottom: 4px;
+        font-size: 11px;
+        margin-bottom: 3px;
       }
       .cards-grid { 
         gap: 6px;
       }
       .result-card {
-        padding: 10px 6px;
-        border-radius: 10px;
+        padding: 8px 4px;
+        border-radius: 8px;
       }
       .result-card h3 {
-        font-size: 10px;
-        margin-bottom: 6px;
+        font-size: 9px;
+        margin-bottom: 4px;
       }
       .result-card .price-myr {
-        font-size: 14px;
+        font-size: 13px;
       }
       .result-card .price-rmb {
-        font-size: 11px;
+        font-size: 10px;
       }
       .result-card .price {
-        font-size: 15px;
+        font-size: 14px;
       }
       .result-card .detail {
-        font-size: 9px;
+        font-size: 8px;
         line-height: 1.3;
       }
       .glass-card {
-        padding: 14px 12px;
-        border-radius: 12px;
-        margin-bottom: 12px;
+        padding: 12px 10px;
+        border-radius: 10px;
+        margin-bottom: 10px;
       }
       .section-title {
-        font-size: 14px;
-        margin-bottom: 12px;
+        font-size: 13px;
+        margin-bottom: 10px;
       }
       .rate-grid {
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 6px;
       }
       .rate-item input {
-        padding: 6px 8px;
-        font-size: 12px;
+        padding: 5px 6px;
+        font-size: 11px;
+        border-radius: 6px;
       }
       .rate-item label {
         font-size: 10px;
+        margin-bottom: 2px;
       }
       .btn {
-        padding: 10px 16px;
-        font-size: 14px;
-        border-radius: 10px;
-        margin-top: 12px;
+        padding: 8px 12px;
+        font-size: 13px;
+        border-radius: 8px;
+        margin-top: 10px;
+      }
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 11px;
       }
       .search-grid {
-        gap: 8px;
+        gap: 6px;
+      }
+      .product-item {
+        padding: 8px;
+      }
+      .product-image {
+        width: 36px;
+        height: 36px;
+        margin-right: 8px;
+      }
+      .product-code {
+        font-size: 10px;
+      }
+      .product-name {
+        font-size: 12px;
+      }
+      .product-meta span {
+        font-size: 10px;
+      }
+      .info-list li {
+        font-size: 11px;
+        padding: 6px 0;
       }
     }
   </style>
@@ -752,7 +782,7 @@
             <input type="text" id="searchName" placeholder="输入关键词" oninput="filterProducts()">
           </div>
         </div>
-        <button class="btn" style="margin-top:12px;padding:8px 16px;font-size:13px" onclick="showAddProduct()">+ 添加产品</button>
+        <button class="btn" style="margin-top:10px;padding:6px 12px;font-size:12px" onclick="showAddProduct()">+ 添加产品</button>
       </div>
       
       <!-- 添加产品表单 -->
@@ -1534,8 +1564,8 @@
       renderProductList(products);
       
       // 注册 Service Worker
-      // if ('serviceWorker' in navigator) {
-        // navigator.serviceWorker.register('sw.js')
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
           .then(reg => console.log('SW registered'))
           .catch(err => console.log('SW registration failed'));
       }
