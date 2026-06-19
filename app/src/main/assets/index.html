@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#007aff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="运费精算">
+  <!-- manifest removed for APK -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjMyIiBmaWxsPSIjMDA3YWZmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWkiIGZvbnQtc2l6ZT0iNjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+TvjwvdGV4dD48L3N2Zz4=">
+  <title>中国发马来西亚 - 运费精算专家</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="products_data.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 50%, #f0f2f5 100%);
+      color: #1d1d1f; 
+      min-height: 100vh; 
+      padding-bottom: 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 24px 16px; 
+    }
+    
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* 底部导航栏 - 苹果风格 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      z-index: 1000;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      padding: 4px 20px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      color: #86868b;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .nav-item:hover, .nav-item.active {
+      color: #007aff;
+    }
+    .nav-item .icon {
+      font-size: 22px;
+    }
+    
+    /* 头部 - 简洁 */
+    .header { 
+      text-align: center; 
+      margin-bottom: 16px;
+      padding: 12px 0;
+    }
+    .header h1 { 
+      color: #1d1d1f; 
+      font-size: 22px; 
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px; 
+    }
+    .header p { 
+      color: #86868b; 
+      font-size: 12px;
+      font-weight: 400;
+    }
+    
+    /* 卡片 - 毛玻璃效果 */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border: 0.5px solid rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .section-title {
+      color: #1d1d1f;
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      letter-spacing: -0.3px;
+    }
+    
+    /* 设置面板 */
+    .settings-toggle { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between;
+      cursor: pointer; 
+      padding: 12px 0;
+      user-select: none;
+    }
+    .settings-toggle:hover { opacity: 0.7; }
+    .settings-toggle .arrow {
+      color: #86868b;
+      font-size: 12px;
+      transition: transform 0.3s ease;
+    }
+    .settings-toggle .arrow.open {
+      transform: rotate(180deg);
+    }
+    .settings-content { 
+      display: none; 
+      padding: 16px 0;
+      animation: slideDown 0.3s ease;
+    }
+    .settings-content.show { display: block; }
+    
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* 表单网格 */
+    .form-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 10px; 
+    }
+    .form-group { 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    .form-group label { 
+      color: #86868b; 
+      font-size: 13px; 
+      font-weight: 500;
+      margin-bottom: 6px; 
+      letter-spacing: -0.2px;
+    }
+    .form-group input, .form-group select { 
+      padding: 10px 12px; 
+      background: rgba(255, 255, 255, 0.8);
+      border: 0.5px solid rgba(0, 0, 0, 0.12);
+      border-radius: 10px; 
+      color: #1d1d1f; 
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      -webkit-appearance: none;
+    }
+    .form-group input:focus, .form-group select:focus { 
+      border-color: #007aff; 
+      outline: none; 
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); 
+    }
+    .form-group input::placeholder {
+      color: #c7c7cc;
+    }
+    
+    /* 按钮 */
+    .btn { 
+      width: 100%;
+      padding: 14px 24px; 
+      background: #007aff;
+      color: #fff; 
+      border: none; 
+      border-radius: 12px; 
+      font-size: 16px; 
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer; 
+      margin-top: 16px; 
+      transition: all 0.2s ease; 
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover { 
+      background: #0056cc; 
+    }
+    .btn:active { 
+      transform: scale(0.98); 
+    }
+    
+    .btn-secondary {
+      background: rgba(0, 122, 255, 0.12);
+      color: #007aff;
+    }
+    .btn-secondary:hover {
+      background: rgba(0, 122, 255, 0.2);
+    }
+    
+    /* 设置按钮 */
+    .btn-sm { 
+      padding: 8px 16px; 
+      background: #007aff;
+      color: #fff; 
+      border: none; 
+      border-radius: 8px; 
+      font-size: 13px; 
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+    }
+    .btn-sm:hover { background: #0056cc; }
+    
+    .btn-outline {
+      background: transparent;
+      color: #007aff;
+      border: 0.5px solid #007aff;
+    }
+    .btn-outline:hover {
+      background: rgba(0, 122, 255, 0.08);
+    }
+    
+    /* 设置网格 */
+    .rate-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 8px; 
+    }
+    .rate-item { 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .rate-item label { 
+      color: #86868b; 
+      font-size: 11px; 
+      font-weight: 500;
+      margin-bottom: 3px; 
+    }
+    .rate-item input { 
+      padding: 8px 10px; 
+      background: rgba(255, 255, 255, 0.8);
+      border: 0.5px solid rgba(0, 0, 0, 0.12);
+      border-radius: 8px; 
+      color: #1d1d1f; 
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .rate-item input:focus { 
+      border-color: #007aff; 
+      outline: none; 
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); 
+    }
+    
+    /* 结果卡片网格 */
+    .cards-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 10px; 
+    }
+    .result-card { 
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border: 0.5px solid rgba(0, 0, 0, 0.06);
+      border-radius: 14px; 
+      padding: 16px 12px; 
+      text-align: center; 
+      transition: all 0.2s ease;
+    }
+    .result-card:active { 
+      transform: scale(0.97); 
+    }
+    .result-card h3 { 
+      color: #86868b; 
+      font-size: 12px; 
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: -0.2px;
+    }
+    .result-card .price-myr { 
+      color: #ff3b30; 
+      font-size: 18px; 
+      font-weight: 700;
+      margin-bottom: 2px;
+      letter-spacing: -0.5px;
+    }
+    .result-card .price-rmb { 
+      color: #1d1d1f; 
+      font-size: 14px; 
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+    .result-card .price { 
+      color: #ff9500; 
+      font-size: 20px; 
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .result-card .detail { 
+      color: #86868b; 
+      font-size: 11px; 
+      line-height: 1.5;
+      font-weight: 400;
+    }
+    
+    /* 信息列表 */
+    .info-list {
+      list-style: none;
+    }
+    .info-list li {
+      padding: 10px 0;
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+      color: #1d1d1f;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .info-list li:last-child {
+      border-bottom: none;
+    }
+    .info-list strong {
+      color: #1d1d1f;
+      font-weight: 600;
+    }
+    
+    /* 产品页面 */
+    .search-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 0;
+    }
+    
+    .upload-area {
+      border: 1.5px dashed rgba(0, 0, 0, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 16px;
+    }
+    .upload-area:hover {
+      border-color: #007aff;
+      background: rgba(0, 122, 255, 0.04);
+    }
+    .upload-area input {
+      display: none;
+    }
+    .upload-area .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .upload-area p {
+      color: #86868b;
+      font-size: 13px;
+    }
+    .upload-area .hint {
+      color: #c7c7cc;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    
+    .product-list {
+      max-height: calc(100vh - 320px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .product-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .product-item:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+    .product-item:active {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .product-item:last-child {
+      border-bottom: none;
+    }
+    .product-image {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 12px;
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .product-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .product-code {
+      color: #007aff;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .product-code:hover {
+      color: #0056cc;
+    }
+    .product-name {
+      color: #1d1d1f;
+      font-size: 14px;
+      font-weight: 500;
+      margin: 2px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .product-meta {
+      color: #86868b;
+      font-size: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .product-meta span {
+      white-space: nowrap;
+    }
+    .product-link {
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .product-link a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 122, 255, 0.1);
+      border-radius: 8px;
+      color: #007aff;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .product-link a:hover {
+      background: rgba(0, 122, 255, 0.2);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #86868b;
+    }
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    .empty-state p {
+      font-size: 14px;
+      font-weight: 400;
+    }
+    
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .container { 
+        padding: 12px 10px; 
+      }
+      .header h1 {
+        font-size: 20px;
+      }
+      .form-grid { 
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .form-group.full-width {
+        grid-column: 1 / -1;
+      }
+      .form-group input, .form-group select {
+        padding: 8px 10px;
+        font-size: 13px;
+        border-radius: 8px;
+      }
+      .form-group label {
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .cards-grid { 
+        gap: 6px;
+      }
+      .result-card {
+        padding: 10px 6px;
+        border-radius: 10px;
+      }
+      .result-card h3 {
+        font-size: 10px;
+        margin-bottom: 6px;
+      }
+      .result-card .price-myr {
+        font-size: 14px;
+      }
+      .result-card .price-rmb {
+        font-size: 11px;
+      }
+      .result-card .price {
+        font-size: 15px;
+      }
+      .result-card .detail {
+        font-size: 9px;
+        line-height: 1.3;
+      }
+      .glass-card {
+        padding: 14px 12px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
+      .section-title {
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+      .rate-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+      }
+      .rate-item input {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+      .rate-item label {
+        font-size: 10px;
+      }
+      .btn {
+        padding: 10px 16px;
+        font-size: 14px;
+        border-radius: 10px;
+        margin-top: 12px;
+      }
+      .search-grid {
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 报价页面 -->
+  <div class="page active" id="page-quotation">
+    <div class="container">
+      <div class="header">
+        <h1>运费精算专家</h1>
+        <p>中国发马来西亚 · SRH官方报价</p>
+      </div>
+      
+      <!-- 运费设置 -->
+      <div class="glass-card">
+        <div class="settings-toggle" onclick="toggleSettings()">
+          <div class="section-title" style="margin-bottom:0">⚙️ 运费单价设置</div>
+          <span class="arrow" id="settingsArrow">▼</span>
+        </div>
+        <div class="settings-content" id="settingsContent">
+          <div class="rate-grid">
+            <div class="rate-item">
+              <label>空运普货 (RMB/kg)</label>
+              <input type="number" id="airNormal" value="20.5" step="0.1">
+            </div>
+            <div class="rate-item">
+              <label>空运带电 (RMB/kg)</label>
+              <input type="number" id="airBattery" value="29" step="0.1">
+            </div>
+            <div class="rate-item">
+              <label>空运敏感 (RMB/kg)</label>
+              <input type="number" id="airSensitive" value="30" step="0.1">
+            </div>
+            <div class="rate-item">
+              <label>西马内坡普货 (RMB/CBM)</label>
+              <input type="number" id="seaWestInnerNormal" value="650" step="10">
+            </div>
+            <div class="rate-item">
+              <label>西马内坡敏感 (RMB/CBM)</label>
+              <input type="number" id="seaWestInnerSensitive" value="670" step="10">
+            </div>
+            <div class="rate-item">
+              <label>西马外坡普货 (RMB/CBM)</label>
+              <input type="number" id="seaWestOuterNormal" value="670" step="10">
+            </div>
+            <div class="rate-item">
+              <label>西马外坡敏感 (RMB/CBM)</label>
+              <input type="number" id="seaWestOuterSensitive" value="690" step="10">
+            </div>
+            <div class="rate-item">
+              <label>东马普货 (RMB/CBM)</label>
+              <input type="number" id="seaEastNormal" value="980" step="10">
+            </div>
+            <div class="rate-item">
+              <label>东马敏感 (RMB/CBM)</label>
+              <input type="number" id="seaEastSensitive" value="1080" step="10">
+            </div>
+            <div class="rate-item">
+              <label>海运小包西马 (RMB/kg)</label>
+              <input type="number" id="parcelWest" value="5.5" step="0.1">
+            </div>
+            <div class="rate-item">
+              <label>海运小包东马 (RMB/kg)</label>
+              <input type="number" id="parcelEast" value="10" step="0.1">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-sm" onclick="saveRates()">保存设置</button>
+            <button class="btn-sm btn-outline" onclick="resetRates()">恢复默认</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 产品信息 -->
+      <div class="glass-card">
+        <div class="section-title">📦 产品信息</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>产品编号</label>
+            <input type="text" id="productCode" value="">
+          </div>
+          <div class="form-group">
+            <label>产品名称</label>
+            <input type="text" id="productName" value="">
+          </div>
+          <div class="form-group">
+            <label>采购价格 (RMB/件)</label>
+            <input type="number" id="purchasePrice" value="" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>内陆费 (RMB/箱)</label>
+            <input type="number" id="inlandFee" value="" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>装箱数 (个/箱)</label>
+            <input type="number" id="itemsPerBox" value="" min="1" step="1">
+          </div>
+          <div class="form-group">
+            <label>利润率 (%)</label>
+            <input type="number" id="profitRate" value="" min="0" step="1">
+          </div>
+          <div class="form-group">
+            <label>长 (cm)</label>
+            <input type="number" id="length" value="" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>宽 (cm)</label>
+            <input type="number" id="width" value="" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>高 (cm)</label>
+            <input type="number" id="height" value="" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>单件重量 (kg)</label>
+            <input type="number" id="actualWeight" value="" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>箱数</label>
+            <input type="number" id="boxes" value="" min="1" step="1">
+          </div>
+          <div class="form-group">
+            <label>目的地邮编</label>
+            <input type="text" id="postcode" value="" placeholder="50000">
+          </div>
+          <div class="form-group full-width">
+            <label>货物类型</label>
+            <select id="goodsType">
+              <option value="normal">普货</option>
+              <option value="battery">带电</option>
+              <option value="sensitive">敏感货</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="calculate()">计算运费</button>
+      </div>
+      
+      <!-- 报价结果 -->
+      <div id="quotationSection" class="glass-card" style="display:none">
+        <div class="section-title">💰 商品报价（含利润）</div>
+        <div class="cards-grid" id="quotationCards"></div>
+      </div>
+      
+      <div id="minQuotationSection" class="glass-card" style="display:none">
+        <div class="section-title">📉 最低报价（利润仅算商品成本）</div>
+        <div class="cards-grid" id="minQuotationCards"></div>
+      </div>
+      
+      <div id="perItemSection" class="glass-card" style="display:none">
+        <div class="section-title">🎯 单件商品运费</div>
+        <div class="cards-grid" id="perItemCards"></div>
+      </div>
+      
+      <div id="resultSection" class="glass-card" style="display:none">
+        <div class="section-title">📊 运费计算结果</div>
+        <div class="cards-grid" id="resultCards"></div>
+      </div>
+      
+      <!-- 计费规则 -->
+      <div class="glass-card">
+        <div class="section-title">📋 计费规则</div>
+        <ul class="info-list">
+          <li><strong>空运DDP：</strong>体积重 = 长×宽×高/6000，分半抛规则，最低11kg</li>
+          <li><strong>海运大货：</strong>体积 = 长×宽×高/1,000,000，重货按500kg/CBM</li>
+          <li><strong>海运小包：</strong>体积重 = 长×宽×高/6000，取实重与体积重最大值</li>
+          <li><strong>偏远派送费：</strong>西马东海岸+80/CBM，东马各城市有附加费</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 产品页面 -->
+  <div class="page" id="page-product">
+    <div class="container">
+      <div class="header">
+        <h1>产品管理</h1>
+        <p>点击产品快速报价</p>
+      </div>
+      
+      <!-- 搜索 -->
+      <div class="glass-card">
+        <div class="search-grid">
+          <div class="form-group">
+            <label>按编号筛选</label>
+            <input type="text" id="filterCode" placeholder="输入编号" oninput="filterProducts()">
+          </div>
+          <div class="form-group">
+            <label>按品名搜索</label>
+            <input type="text" id="searchName" placeholder="输入关键词" oninput="filterProducts()">
+          </div>
+        </div>
+        <button class="btn" style="margin-top:12px;padding:8px 16px;font-size:13px" onclick="showAddProduct()">+ 添加产品</button>
+      </div>
+      
+      <!-- 添加产品表单 -->
+      <div class="glass-card" id="addProductForm" style="display:none">
+        <div class="section-title">➕ 添加新产品</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>产品编号</label>
+            <input type="text" id="newCode" placeholder="如: qs-200">
+          </div>
+          <div class="form-group">
+            <label>产品名称</label>
+            <input type="text" id="newName" placeholder="输入品名">
+          </div>
+          <div class="form-group">
+            <label>采购价格 (RMB)</label>
+            <input type="number" id="newPrice" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>装箱数</label>
+            <input type="number" id="newBox" min="1" value="50">
+          </div>
+          <div class="form-group">
+            <label>长 (cm)</label>
+            <input type="number" id="newLength" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>宽 (cm)</label>
+            <input type="number" id="newWidth" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>高 (cm)</label>
+            <input type="number" id="newHeight" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>重量 (kg)</label>
+            <input type="number" id="newWeight" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>内陆费 (RMB)</label>
+            <input type="number" id="newInland" min="0" value="20">
+          </div>
+          <div class="form-group">
+            <label>利润率 (%)</label>
+            <input type="number" id="newProfit" min="0" value="25">
+          </div>
+          <div class="form-group">
+            <label>货源链接</label>
+            <input type="text" id="newLink" placeholder="1688链接">
+          </div>
+          <div class="form-group">
+            <label>产品图片</label>
+            <input type="file" id="newImage" accept="image/*">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn-sm" onclick="addProduct()">保存产品</button>
+          <button class="btn-sm btn-outline" onclick="hideAddProduct()">取消</button>
+        </div>
+      </div>
+      
+      <!-- 编辑产品表单 -->
+      <div class="glass-card" id="editProductForm" style="display:none">
+        <div class="section-title">✏️ 编辑产品</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>产品编号</label>
+            <input type="text" id="editCode" readonly style="background:#f5f5f5">
+          </div>
+          <div class="form-group">
+            <label>产品名称</label>
+            <input type="text" id="editName">
+          </div>
+          <div class="form-group">
+            <label>采购价格 (RMB)</label>
+            <input type="number" id="editPrice" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>装箱数</label>
+            <input type="number" id="editBox" min="1">
+          </div>
+          <div class="form-group">
+            <label>长 (cm)</label>
+            <input type="number" id="editLength" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>宽 (cm)</label>
+            <input type="number" id="editWidth" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>高 (cm)</label>
+            <input type="number" id="editHeight" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>重量 (kg)</label>
+            <input type="number" id="editWeight" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>内陆费 (RMB)</label>
+            <input type="number" id="editInland" min="0">
+          </div>
+          <div class="form-group">
+            <label>利润率 (%)</label>
+            <input type="number" id="editProfit" min="0">
+          </div>
+          <div class="form-group">
+            <label>货源链接</label>
+            <input type="text" id="editLink">
+          </div>
+          <div class="form-group">
+            <label>产品图片</label>
+            <input type="file" id="editImage" accept="image/*">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn-sm" onclick="saveEdit()">保存修改</button>
+          <button class="btn-sm btn-outline" onclick="hideEditProduct()">取消</button>
+        </div>
+      </div>
+      
+      <!-- 产品列表 -->
+      <div class="glass-card">
+        <div class="product-list" id="productList">
+          <div class="empty-state">
+            <div class="icon">📦</div>
+            <p>暂无产品数据</p>
+            <p class="hint" style="margin-top:4px">请上传产品表格</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部导航栏 -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchPage('quotation')">
+      <span class="icon">📊</span>
+      <span>报价</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('product')">
+      <span class="icon">📦</span>
+      <span>产品</span>
+    </div>
+  </div>
+
+  <script>
+    // 页面切换
+    function switchPage(pageName) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + pageName).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+    
+    // 默认运费单价
+    const defaultRates = {
+      airNormal: 20.5, airBattery: 29, airSensitive: 30,
+      seaWestInnerNormal: 650, seaWestInnerSensitive: 670,
+      seaWestOuterNormal: 670, seaWestOuterSensitive: 690,
+      seaEastNormal: 980, seaEastSensitive: 1080,
+      parcelWest: 5.5, parcelEast: 10
+    };
+    
+    // 加载保存的运费设置
+    function loadRates() {
+      const saved = localStorage.getItem('shippingRates');
+      if (saved) {
+        const rates = JSON.parse(saved);
+        Object.keys(rates).forEach(key => {
+          const el = document.getElementById(key);
+          if (el) el.value = rates[key];
+        });
+      }
+    }
+    
+    // 保存运费设置
+    function saveRates() {
+      const rates = {};
+      Object.keys(defaultRates).forEach(key => {
+        rates[key] = parseFloat(document.getElementById(key).value);
+      });
+      localStorage.setItem('shippingRates', JSON.stringify(rates));
+      alert('运费设置已保存！');
+    }
+    
+    // 恢复默认设置
+    function resetRates() {
+      if (confirm('确定要恢复默认运费设置吗？')) {
+        localStorage.removeItem('shippingRates');
+        Object.keys(defaultRates).forEach(key => {
+          document.getElementById(key).value = defaultRates[key];
+        });
+        alert('已恢复默认设置！');
+      }
+    }
+    
+    // 切换设置面板
+    function toggleSettings() {
+      const content = document.getElementById('settingsContent');
+      const arrow = document.getElementById('settingsArrow');
+      content.classList.toggle('show');
+      arrow.classList.toggle('open');
+    }
+    
+    // 获取当前运费设置
+    function getRates() {
+      const rates = {};
+      Object.keys(defaultRates).forEach(key => {
+        rates[key] = parseFloat(document.getElementById(key).value);
+      });
+      return rates;
+    }
+    
+    // 马来西亚邮编区域判断
+    function getRegion(postcode) {
+      const pc = parseInt(postcode);
+      if (pc >= 1000 && pc <= 2800) return 'west_inner';
+      if (pc >= 4000 && pc <= 4999) return 'west_inner';
+      if (pc >= 5000 && pc <= 5999) return 'west_inner';
+      if (pc >= 6000 && pc <= 6999) return 'west_inner';
+      if (pc >= 7000 && pc <= 7999) return 'west_outer';
+      if (pc >= 8000 && pc <= 8999) return 'west_outer';
+      if (pc >= 10000 && pc <= 14999) return 'west_outer';
+      if (pc >= 15000 && pc <= 18500) return 'west_east';
+      if (pc >= 20000 && pc <= 24300) return 'west_east';
+      if (pc >= 25000 && pc <= 28800) return 'west_east';
+      if (pc >= 30000 && pc <= 39999) return 'west_outer';
+      if (pc >= 40000 && pc <= 49999) return 'west_outer';
+      if (pc >= 50000 && pc <= 59999) return 'west_inner';
+      if (pc >= 60000 && pc <= 69999) return 'west_inner';
+      if (pc >= 70000 && pc <= 79999) return 'west_outer';
+      if (pc >= 80000 && pc <= 89999) return 'west_outer';
+      if (pc >= 87000 && pc <= 87033) return 'east_sabah';
+      if (pc >= 88000 && pc <= 92999) return 'east_sabah';
+      if (pc >= 93000 && pc <= 99999) return 'east_sarawak';
+      return 'west_outer';
+    }
+    
+    // 空运DDP计算
+    function calculateAir(l, w, h, weight, boxes, postcode, goodsType) {
+      const rates = getRates();
+      const volumeWeight = (l * w * h) / 6000 * boxes;
+      const totalWeight = weight * boxes;
+      let chargeWeight = volumeWeight > totalWeight ? (totalWeight + volumeWeight) / 2 : totalWeight;
+      chargeWeight = Math.max(chargeWeight, 11);
+      
+      let unitPrice;
+      if (goodsType === 'normal') unitPrice = rates.airNormal;
+      else if (goodsType === 'battery') unitPrice = rates.airBattery;
+      else unitPrice = rates.airSensitive;
+      
+      const totalCost = chargeWeight * unitPrice;
+      const isRemote = [44000, 45500, 45620, 45400, 44100, 42800, 45300, 43950].includes(parseInt(postcode));
+      
+      return {
+        method: '✈️ 空运DDP',
+        volumeWeight: volumeWeight.toFixed(2),
+        chargeWeight: chargeWeight.toFixed(2),
+        unitPrice, totalCost: totalCost.toFixed(2),
+        note: isRemote ? '⚠️ 偏远邮编' : ''
+      };
+    }
+    
+    // 海运大货计算
+    function calculateSeaBulk(l, w, h, weight, boxes, postcode, goodsType) {
+      const rates = getRates();
+      const volume = (l * w * h) / 1000000 * boxes;
+      const totalWeight = weight * boxes;
+      const region = getRegion(postcode);
+      const heavyRatio = totalWeight / volume;
+      const isHeavy = heavyRatio > 500;
+      let finalVolume = isHeavy ? totalWeight / 500 : volume;
+      
+      let unitPrice, minCBM;
+      const isSensitive = goodsType === 'sensitive';
+      
+      if (region === 'west_inner') {
+        unitPrice = isSensitive ? rates.seaWestInnerSensitive : rates.seaWestInnerNormal;
+        minCBM = 0.3;
+      } else if (region === 'west_outer' || region === 'west_east') {
+        unitPrice = isSensitive ? rates.seaWestOuterSensitive : rates.seaWestOuterNormal;
+        minCBM = 0.3;
+      } else {
+        unitPrice = isSensitive ? rates.seaEastSensitive : rates.seaEastNormal;
+        minCBM = 0.5;
+      }
+      
+      finalVolume = Math.max(finalVolume, minCBM);
+      finalVolume = region.startsWith('west') ? Math.ceil(finalVolume * 100) / 100 : Math.ceil(finalVolume * 10) / 10;
+      
+      const totalCost = finalVolume * unitPrice;
+      
+      return {
+        method: '🚢 海运大货',
+        volume: volume.toFixed(4),
+        finalVolume: finalVolume.toFixed(2),
+        unitPrice, totalCost: totalCost.toFixed(2),
+        isHeavy, heavyRatio: heavyRatio.toFixed(1),
+        note: isHeavy ? '⚠️ 重货' : ''
+      };
+    }
+    
+    // 海运小包计算
+    function calculateSeaParcel(l, w, h, weight, boxes, postcode, goodsType) {
+      const rates = getRates();
+      const volumeWeight = (l * w * h) / 6000 * boxes;
+      const totalWeight = weight * boxes;
+      const region = getRegion(postcode);
+      let chargeWeight = Math.max(totalWeight, volumeWeight, 11);
+      
+      let unitPrice = region.startsWith('west') ? rates.parcelWest : rates.parcelEast;
+      const totalCost = chargeWeight * unitPrice;
+      const remoteSurcharge = (region === 'east_sabah' || region === 'east_sarawak') ? 20 + (chargeWeight - 1) * 15 : 0;
+      const finalCost = totalCost + remoteSurcharge;
+      
+      return {
+        method: '📦 海运小包',
+        volumeWeight: volumeWeight.toFixed(2),
+        chargeWeight: chargeWeight.toFixed(2),
+        unitPrice, totalCost: totalCost.toFixed(2),
+        remoteSurcharge: remoteSurcharge.toFixed(2),
+        finalCost: finalCost.toFixed(2),
+        note: remoteSurcharge > 0 ? '⚠️ 偏远加费' : ''
+      };
+    }
+    
+    function calculate() {
+      const l = parseFloat(document.getElementById('length').value);
+      const w = parseFloat(document.getElementById('width').value);
+      const h = parseFloat(document.getElementById('height').value);
+      const weight = parseFloat(document.getElementById('actualWeight').value);
+      const boxes = parseInt(document.getElementById('boxes').value);
+      const postcode = document.getElementById('postcode').value;
+      const goodsType = document.getElementById('goodsType').value;
+      const productCode = document.getElementById('productCode').value || '';
+      const productName = document.getElementById('productName').value || '未命名产品';
+      const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
+      const inlandFee = parseFloat(document.getElementById('inlandFee').value) || 0;
+      const itemsPerBox = parseInt(document.getElementById('itemsPerBox').value) || 1;
+      const profitRate = parseFloat(document.getElementById('profitRate').value) || 0;
+      
+      if (!l || !w || !h || !weight || !boxes) {
+        alert('请填写完整的尺寸和重量信息');
+        return;
+      }
+      
+      const airResult = calculateAir(l, w, h, weight, boxes, postcode, goodsType);
+      const seaBulkResult = calculateSeaBulk(l, w, h, weight, boxes, postcode, goodsType);
+      const seaParcelResult = calculateSeaParcel(l, w, h, weight, boxes, postcode, goodsType);
+      
+      const totalItems = itemsPerBox * boxes;
+      const airPerItem = parseFloat(airResult.totalCost) / totalItems;
+      const seaBulkPerItem = parseFloat(seaBulkResult.totalCost) / totalItems;
+      const seaParcelPerItem = parseFloat(seaParcelResult.finalCost) / totalItems;
+      const inlandPerItem = inlandFee / itemsPerBox;
+      
+      const profitMultiplier = 1 + (profitRate / 100);
+      const airQuotation = (purchasePrice + inlandPerItem + airPerItem) * profitMultiplier;
+      const seaBulkQuotation = (purchasePrice + inlandPerItem + seaBulkPerItem) * profitMultiplier;
+      const seaParcelQuotation = (purchasePrice + inlandPerItem + seaParcelPerItem) * profitMultiplier;
+      
+      const baseCostWithProfit = (purchasePrice + inlandPerItem) * profitMultiplier;
+      const airMinQuotation = baseCostWithProfit + airPerItem;
+      const seaBulkMinQuotation = baseCostWithProfit + seaBulkPerItem;
+      const seaParcelMinQuotation = baseCostWithProfit + seaParcelPerItem;
+      
+      displayQuotationResults(productCode, productName, purchasePrice, inlandPerItem, profitRate, 
+        airQuotation, seaBulkQuotation, seaParcelQuotation);
+      displayMinQuotationResults(productCode, productName, purchasePrice, inlandPerItem, profitRate, 
+        airMinQuotation, seaBulkMinQuotation, seaParcelMinQuotation);
+      displayPerItemResults(productName, totalItems, airPerItem.toFixed(2), seaBulkPerItem.toFixed(2), seaParcelPerItem.toFixed(2));
+      displayResults([airResult, seaBulkResult, seaParcelResult]);
+    }
+    
+    function displayQuotationResults(productCode, productName, purchasePrice, inlandPerItem, profitRate, airQuotation, seaBulkQuotation, seaParcelQuotation) {
+      const container = document.getElementById('quotationCards');
+      const exchangeRate = 1.65;
+      
+      const cards = [
+        { title: '✈️ 空运DDP', priceRMB: airQuotation.toFixed(2), priceMYR: (airQuotation / exchangeRate).toFixed(2), detail: `采购：¥${purchasePrice.toFixed(2)} · 内陆：¥${inlandPerItem.toFixed(2)} · 利润：${profitRate}%` },
+        { title: '🚢 海运大货', priceRMB: seaBulkQuotation.toFixed(2), priceMYR: (seaBulkQuotation / exchangeRate).toFixed(2), detail: `采购：¥${purchasePrice.toFixed(2)} · 内陆：¥${inlandPerItem.toFixed(2)} · 利润：${profitRate}%` },
+        { title: '📦 海运小包', priceRMB: seaParcelQuotation.toFixed(2), priceMYR: (seaParcelQuotation / exchangeRate).toFixed(2), detail: `采购：¥${purchasePrice.toFixed(2)} · 内陆：¥${inlandPerItem.toFixed(2)} · 利润：${profitRate}%` }
+      ];
+      
+      container.innerHTML = cards.map(r => `
+        <div class="result-card">
+          <h3>${r.title}</h3>
+          <div class="price-myr">RM${r.priceMYR}</div>
+          <div class="price-rmb">¥${r.priceRMB}</div>
+          <div class="detail">${productCode ? `${productCode} · ` : ''}${productName}<br>${r.detail}</div>
+        </div>
+      `).join('');
+      
+      document.getElementById('quotationSection').style.display = 'block';
+    }
+    
+    function displayMinQuotationResults(productCode, productName, purchasePrice, inlandPerItem, profitRate, airMinQuotation, seaBulkMinQuotation, seaParcelMinQuotation) {
+      const container = document.getElementById('minQuotationCards');
+      const exchangeRate = 1.65;
+      
+      const cards = [
+        { title: '✈️ 空运DDP', priceRMB: airMinQuotation.toFixed(2), priceMYR: (airMinQuotation / exchangeRate).toFixed(2) },
+        { title: '🚢 海运大货', priceRMB: seaBulkMinQuotation.toFixed(2), priceMYR: (seaBulkMinQuotation / exchangeRate).toFixed(2) },
+        { title: '📦 海运小包', priceRMB: seaParcelMinQuotation.toFixed(2), priceMYR: (seaParcelMinQuotation / exchangeRate).toFixed(2) }
+      ];
+      
+      container.innerHTML = cards.map(r => `
+        <div class="result-card">
+          <h3>${r.title}</h3>
+          <div class="price-myr">RM${r.priceMYR}</div>
+          <div class="price-rmb">¥${r.priceRMB}</div>
+          <div class="detail">利润率：${profitRate}%（仅算商品成本）</div>
+        </div>
+      `).join('');
+      
+      document.getElementById('minQuotationSection').style.display = 'block';
+    }
+    
+    function displayPerItemResults(productName, totalItems, airPerItem, seaBulkPerItem, seaParcelPerItem) {
+      const container = document.getElementById('perItemCards');
+      
+      const cards = [
+        { title: '✈️ 空运DDP', price: airPerItem },
+        { title: '🚢 海运大货', price: seaBulkPerItem },
+        { title: '📦 海运小包', price: seaParcelPerItem }
+      ];
+      
+      container.innerHTML = cards.map(r => `
+        <div class="result-card">
+          <h3>${r.title}</h3>
+          <div class="price">¥${r.price}</div>
+          <div class="detail">${productName} · ${totalItems}件</div>
+        </div>
+      `).join('');
+      
+      document.getElementById('perItemSection').style.display = 'block';
+    }
+    
+    function displayResults(results) {
+      const container = document.getElementById('resultCards');
+      
+      container.innerHTML = results.map(r => `
+        <div class="result-card">
+          <h3>${r.method}</h3>
+          <div class="price">¥${r.finalCost || r.totalCost}</div>
+          <div class="detail">
+            ${r.volumeWeight ? `体积重: ${r.volumeWeight}kg<br>` : ''}
+            ${r.chargeWeight ? `计费重: ${r.chargeWeight}kg<br>` : ''}
+            ${r.volume ? `体积: ${r.volume} CBM<br>` : ''}
+            ${r.finalVolume ? `计费: ${r.finalVolume} CBM<br>` : ''}
+            单价: ¥${r.unitPrice}<br>
+            ${r.isHeavy ? `重货比: ${r.heavyRatio}<br>` : ''}
+            ${r.remoteSurcharge ? `偏远加费: ¥${r.remoteSurcharge}<br>` : ''}
+            ${r.note ? `<span style="color:#ff9500">${r.note}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('resultSection').style.display = 'block';
+    }
+    
+    // ===== 产品管理 =====
+    let products = [];
+    
+    function loadProductsFromStorage() {
+      // 从全局变量加载产品数据
+      if (typeof PRODUCTS_DATA !== 'undefined') {
+        products = PRODUCTS_DATA;
+        renderProductList(products);
+      }
+    }
+    
+    function saveProductsToStorage() {
+      localStorage.setItem('products', JSON.stringify(products));
+    }
+    
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+        parseProductData(jsonData);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+    
+    function parseProductData(data) {
+      if (data.length < 2) {
+        alert('表格数据为空或格式不正确');
+        return;
+      }
+      
+      const headers = data[0];
+      const find = (keywords) => headers.findIndex(h => h && keywords.some(k => h.includes(k)));
+      
+      const codeIndex = find(['编号', 'code', 'Code']);
+      const nameIndex = find(['品名', '名称', 'name', 'Name']);
+      const imageIndex = find(['图片', 'image', 'Image']);
+      const priceIndex = find(['采购价', '价格', 'price', 'Price']);
+      const boxIndex = find(['装箱数', '箱', 'box', 'Box']);
+      const lengthIndex = find(['长', 'length', 'Length']);
+      const widthIndex = find(['宽', 'width', 'Width']);
+      const heightIndex = find(['高', 'height', 'Height']);
+      const weightIndex = find(['重量', 'weight', 'Weight']);
+      const profitIndex = find(['利润率', '利润', 'profit', 'Profit']);
+      const linkIndex = find(['链接', 'link', 'Link', '货源']);
+      
+      if (codeIndex === -1 || nameIndex === -1) {
+        alert('表格必须包含"产品编号"和"产品品名"列');
+        return;
+      }
+      
+      products = [];
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || !row[codeIndex]) continue;
+        
+        products.push({
+          code: String(row[codeIndex] || ''),
+          name: String(row[nameIndex] || ''),
+          image: String(row[imageIndex] || ''),
+          price: parseFloat(row[priceIndex]) || 0,
+          box: parseInt(row[boxIndex]) || 1,
+          length: parseFloat(row[lengthIndex]) || 0,
+          width: parseFloat(row[widthIndex]) || 0,
+          height: parseFloat(row[heightIndex]) || 0,
+          weight: parseFloat(row[weightIndex]) || 0,
+          profit: parseFloat(row[profitIndex]) || 30,
+          link: String(row[linkIndex] || '')
+        });
+      }
+      
+      saveProductsToStorage();
+      renderProductList(products);
+      alert(`成功导入 ${products.length} 个产品`);
+    }
+    
+    function renderProductList(productList) {
+      const container = document.getElementById('productList');
+      
+      if (productList.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📦</div>
+            <p>暂无产品数据</p>
+            <p class="hint" style="margin-top:4px">请上传产品表格</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = productList.map(product => `
+        <div class="product-item" id="product-${product.code}">
+          <img class="product-image" src="${product.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDQiIGhlaWdodD0iNDQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiBmaWxsPSIjZjVmN2ZhIiByeD0iOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpIiBmb250LXNpemU9IjEwIiBmaWxsPSIjODY4NjhiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm88L3RleHQ+PC9zdmc+'}" alt="${product.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDQiIGhlaWdodD0iNDQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiBmaWxsPSIjZjVmN2ZhIiByeD0iOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic3lzdGVtLXVpIiBmb250LXNpemU9IjEwIiBmaWxsPSIjODY4NjhiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm88L3RleHQ+PC9zdmc+'}">
+          <div class="product-info">
+            <div class="product-code" onclick="selectProduct('${product.code.replace(/'/g, "\\'")}')" style="cursor:pointer">${product.code}</div>
+            <div class="product-name">${product.name}</div>
+            <div class="product-meta">
+              <span>¥${product.price}</span>
+              <span>${product.box}箱</span>
+              <span>${product.profit}%</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;margin-left:8px;align-items:center">
+            ${product.link ? `<a href="${product.link}" target="_blank" style="color:#007aff;font-size:16px;text-decoration:none">🔗</a>` : ''}
+            <button class="btn-sm" style="padding:4px 8px;font-size:11px" onclick="editProduct('${product.code.replace(/'/g, "\\'")}')">编辑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function filterProducts() {
+      const filterCode = document.getElementById('filterCode').value.toLowerCase();
+      const searchName = document.getElementById('searchName').value.toLowerCase();
+      
+      const filtered = products.filter(product => {
+        const matchCode = !filterCode || product.code.toLowerCase().includes(filterCode);
+        const matchName = !searchName || product.name.toLowerCase().includes(searchName);
+        return matchCode && matchName;
+      });
+      
+      renderProductList(filtered);
+    }
+    
+    function selectProduct(code) {
+      const product = products.find(p => p.code === code);
+      if (!product) return;
+      
+      document.getElementById('productCode').value = product.code;
+      document.getElementById('productName').value = product.name;
+      document.getElementById('purchasePrice').value = product.price;
+      document.getElementById('itemsPerBox').value = product.box;
+      document.getElementById('length').value = product.length;
+      document.getElementById('width').value = product.width;
+      document.getElementById('height').value = product.height;
+      document.getElementById('actualWeight').value = product.weight;
+      document.getElementById('profitRate').value = product.profit;
+      
+      switchPage('quotation');
+      calculate();
+    }
+    
+    // 显示/隐藏添加产品表单
+    function showAddProduct() {
+      document.getElementById('addProductForm').style.display = 'block';
+    }
+    
+    function hideAddProduct() {
+      document.getElementById('addProductForm').style.display = 'none';
+    }
+    
+    // 添加新产品
+    function addProduct() {
+      const code = document.getElementById('newCode').value.trim();
+      const name = document.getElementById('newName').value.trim();
+      const price = parseFloat(document.getElementById('newPrice').value) || 0;
+      const box = parseInt(document.getElementById('newBox').value) || 50;
+      const length = parseFloat(document.getElementById('newLength').value) || 0;
+      const width = parseFloat(document.getElementById('newWidth').value) || 0;
+      const height = parseFloat(document.getElementById('newHeight').value) || 0;
+      const weight = parseFloat(document.getElementById('newWeight').value) || 0;
+      const inland = parseFloat(document.getElementById('newInland').value) || 20;
+      const profit = parseFloat(document.getElementById('newProfit').value) || 25;
+      const link = document.getElementById('newLink').value.trim();
+      const imageFile = document.getElementById('newImage').files[0];
+      
+      if (!code || !name) {
+        alert('请填写产品编号和名称');
+        return;
+      }
+      
+      // 检查编号是否已存在
+      if (products.some(p => p.code === code)) {
+        alert('产品编号已存在');
+        return;
+      }
+      
+      // 处理图片上传
+      let imagePath = '';
+      if (imageFile) {
+        // 读取图片为 base64
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePath = e.target.result;
+          saveNewProduct(code, name, price, box, length, width, height, weight, inland, profit, link, imagePath);
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        saveNewProduct(code, name, price, box, length, width, height, weight, inland, profit, link, imagePath);
+      }
+    }
+    
+    function saveNewProduct(code, name, price, box, length, width, height, weight, inland, profit, link, image) {
+      const newProduct = {
+        code, name, price, box, length, width, height, weight, inland, profit, link, image
+      };
+      
+      products.push(newProduct);
+      
+      // 保存到 localStorage
+      localStorage.setItem('custom_products', JSON.stringify(products.filter(p => !PRODUCTS_DATA.some(pd => pd.code === p.code))));
+      
+      // 重新渲染
+      renderProductList(products);
+      
+      // 清空表单
+      document.getElementById('newCode').value = '';
+      document.getElementById('newName').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newLength').value = '';
+      document.getElementById('newWidth').value = '';
+      document.getElementById('newHeight').value = '';
+      document.getElementById('newWeight').value = '';
+      document.getElementById('newLink').value = '';
+      document.getElementById('newImage').value = '';
+      
+      hideAddProduct();
+      alert('产品添加成功！');
+    }
+    
+    // 加载自定义产品
+    function loadCustomProducts() {
+      const saved = localStorage.getItem('custom_products');
+      if (saved) {
+        const customProducts = JSON.parse(saved);
+        // 合并到产品列表
+        customProducts.forEach(cp => {
+          if (!products.some(p => p.code === cp.code)) {
+            products.push(cp);
+          }
+        });
+      }
+    }
+    
+    // 编辑产品
+    let editingProductCode = null;
+    
+    function editProduct(code) {
+      const product = products.find(p => p.code === code);
+      if (!product) return;
+      
+      editingProductCode = code;
+      
+      document.getElementById('editCode').value = product.code;
+      document.getElementById('editName').value = product.name;
+      document.getElementById('editPrice').value = product.price;
+      document.getElementById('editBox').value = product.box;
+      document.getElementById('editLength').value = product.length;
+      document.getElementById('editWidth').value = product.width;
+      document.getElementById('editHeight').value = product.height;
+      document.getElementById('editWeight').value = product.weight;
+      document.getElementById('editInland').value = product.inland;
+      document.getElementById('editProfit').value = product.profit;
+      document.getElementById('editLink').value = product.link || '';
+      
+      document.getElementById('editProductForm').style.display = 'block';
+      document.getElementById('editProductForm').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function hideEditProduct() {
+      document.getElementById('editProductForm').style.display = 'none';
+      editingProductCode = null;
+    }
+    
+    function saveEdit() {
+      if (!editingProductCode) return;
+      
+      const product = products.find(p => p.code === editingProductCode);
+      if (!product) return;
+      
+      product.name = document.getElementById('editName').value.trim();
+      product.price = parseFloat(document.getElementById('editPrice').value) || 0;
+      product.box = parseInt(document.getElementById('editBox').value) || 50;
+      product.length = parseFloat(document.getElementById('editLength').value) || 0;
+      product.width = parseFloat(document.getElementById('editWidth').value) || 0;
+      product.height = parseFloat(document.getElementById('editHeight').value) || 0;
+      product.weight = parseFloat(document.getElementById('editWeight').value) || 0;
+      product.inland = parseFloat(document.getElementById('editInland').value) || 0;
+      product.profit = parseFloat(document.getElementById('editProfit').value) || 25;
+      product.link = document.getElementById('editLink').value.trim();
+      
+      // 处理图片上传
+      const imageFile = document.getElementById('editImage').files[0];
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          product.image = e.target.result;
+          finishEdit();
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        finishEdit();
+      }
+    }
+    
+    function finishEdit() {
+      // 保存到 localStorage
+      const customProducts = products.filter(p => !PRODUCTS_DATA.some(pd => pd.code === p.code));
+      localStorage.setItem('custom_products', JSON.stringify(customProducts));
+      
+      // 重新渲染
+      renderProductList(products);
+      
+      hideEditProduct();
+      alert('产品修改成功！');
+    }
+    
+    // 初始化
+    window.onload = function() {
+      loadRates();
+      loadProductsFromStorage();
+      loadCustomProducts();
+      renderProductList(products);
+      
+      // 注册 Service Worker
+      // if ('serviceWorker' in navigator) {
+        // navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered'))
+          .catch(err => console.log('SW registration failed'));
+      }
+    };
+  </script>
+</body>
+</html>
