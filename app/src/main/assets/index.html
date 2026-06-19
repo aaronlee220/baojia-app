@@ -1221,7 +1221,8 @@
     function loadProductsFromStorage() {
       // 从全局变量加载产品数据
       if (typeof PRODUCTS_DATA !== 'undefined') {
-        products = PRODUCTS_DATA;
+        const deleted = JSON.parse(localStorage.getItem('deleted_products') || '[]');
+        products = PRODUCTS_DATA.filter(p => !deleted.includes(p.code));
         renderProductList(products);
       }
     }
@@ -1325,9 +1326,35 @@
           <div style="display:flex;gap:4px;margin-left:8px;align-items:center">
             ${product.link ? `<a href="${product.link}" target="_blank" style="color:#007aff;font-size:16px;text-decoration:none">🔗</a>` : ''}
             <button class="btn-sm" style="padding:4px 8px;font-size:11px" onclick="editProduct('${product.code.replace(/'/g, "\\'")}')">编辑</button>
+            <button class="btn-sm" style="padding:4px 8px;font-size:11px;background:#ff3b30;color:white;border:none;border-radius:6px" onclick="deleteProduct('${product.code.replace(/'/g, "\\'")}')">删除</button>
           </div>
         </div>
       `).join('');
+    }
+    
+    function deleteProduct(code) {
+      if (!confirm('确定删除产品 ' + code + ' 吗？')) return;
+      
+      // Check if it's from PRODUCTS_DATA (built-in)
+      const isBuiltIn = typeof PRODUCTS_DATA !== 'undefined' && PRODUCTS_DATA.some(p => p.code === code);
+      
+      if (isBuiltIn) {
+        // Add to deleted list in localStorage
+        let deleted = JSON.parse(localStorage.getItem('deleted_products') || '[]');
+        if (!deleted.includes(code)) deleted.push(code);
+        localStorage.setItem('deleted_products', JSON.stringify(deleted));
+      }
+      
+      // Remove from current list
+      products = products.filter(p => p.code !== code);
+      
+      // Also remove from custom products
+      let custom = JSON.parse(localStorage.getItem('custom_products') || '[]');
+      custom = custom.filter(p => p.code !== code);
+      localStorage.setItem('custom_products', JSON.stringify(custom));
+      
+      renderProductList(products);
+      alert('产品已删除');
     }
     
     function filterProducts() {
