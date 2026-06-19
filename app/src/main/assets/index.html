@@ -1365,24 +1365,7 @@
     function deleteProduct(code) {
       if (!confirm('确定删除产品 ' + code + ' 吗？')) return;
       
-      // Check if it's from PRODUCTS_DATA (built-in)
-      const isBuiltIn = typeof PRODUCTS_DATA !== 'undefined' && PRODUCTS_DATA.some(p => p.code === code);
-      
-      if (isBuiltIn) {
-        // Add to deleted list in localStorage
-        let deleted = JSON.parse(localStorage.getItem('deleted_products') || '[]');
-        if (!deleted.includes(code)) deleted.push(code);
-        localStorage.setItem('deleted_products', JSON.stringify(deleted));
-      }
-      
-      // Remove from current list
       products = products.filter(p => p.code !== code);
-      
-      // Also remove from custom products
-      let custom = JSON.parse(localStorage.getItem('custom_products') || '[]');
-      custom = custom.filter(p => p.code !== code);
-      localStorage.setItem('custom_products', JSON.stringify(custom));
-      
       saveProductsToStorage();
       renderProductList(products);
       alert('产品已删除');
@@ -1480,8 +1463,8 @@
       
       products.push(newProduct);
       
-      // 保存到 localStorage
-      localStorage.setItem('custom_products', JSON.stringify(products.filter(p => !PRODUCTS_DATA.some(pd => pd.code === p.code))));
+      // 保存到服务器
+      saveProductsToStorage();
       
       // 重新渲染
       renderProductList(products);
@@ -1584,10 +1567,6 @@
     function finishEdit() {
       // Save to server
       saveProductsToStorage();
-      
-      // Also save to localStorage as backup
-      const customProducts = products.filter(p => !PRODUCTS_DATA.some(pd => pd.code === p.code));
-      localStorage.setItem('custom_products', JSON.stringify(customProducts));
       
       renderProductList(products);
       hideEditProduct();
