@@ -975,26 +975,73 @@
     // 马来西亚邮编区域判断
     function getRegion(postcode) {
       const pc = parseInt(postcode);
-      if (pc >= 1000 && pc <= 2800) return 'west_inner';
+      // 玻璃市州 (Perlis) - 西马偏远
+      if (pc >= 1000 && pc <= 2800) return 'west_remote';
+      // 吉打州 (Kedah) - 西马内坡
       if (pc >= 4000 && pc <= 4999) return 'west_inner';
+      // 槟城 (Penang) - 西马内坡
       if (pc >= 5000 && pc <= 5999) return 'west_inner';
+      // 霹雳州 (Perak) - 西马内坡
       if (pc >= 6000 && pc <= 6999) return 'west_inner';
-      if (pc >= 7000 && pc <= 7999) return 'west_outer';
-      if (pc >= 8000 && pc <= 8999) return 'west_outer';
+      // 雪兰莪 (Selangor) - 西马内坡
+      if (pc >= 7000 && pc <= 7999) return 'west_inner';
+      // 吉隆坡 (KL) - 西马内坡
+      if (pc >= 8000 && pc <= 8999) return 'west_inner';
+      // 森美兰 (Negeri Sembilan) - 西马外坡
       if (pc >= 10000 && pc <= 14999) return 'west_outer';
-      if (pc >= 15000 && pc <= 18500) return 'west_east';
-      if (pc >= 20000 && pc <= 24300) return 'west_east';
-      if (pc >= 25000 && pc <= 28800) return 'west_east';
+      // 吉兰丹州 (Kelantan) - 西马偏远
+      if (pc >= 15000 && pc <= 18500) return 'west_remote';
+      // 登嘉楼州 (Terengganu) - 西马偏远
+      if (pc >= 20000 && pc <= 24300) return 'west_remote';
+      // 彭亨州 (Pahang) - 西马偏远
+      if (pc >= 25000 && pc <= 28800) return 'west_remote';
+      // 马六甲 (Melaka) - 西马外坡
       if (pc >= 30000 && pc <= 39999) return 'west_outer';
+      // 柔佛 (Johor) - 西马外坡
       if (pc >= 40000 && pc <= 49999) return 'west_outer';
-      if (pc >= 50000 && pc <= 59999) return 'west_inner';
-      if (pc >= 60000 && pc <= 69999) return 'west_inner';
-      if (pc >= 70000 && pc <= 79999) return 'west_outer';
-      if (pc >= 80000 && pc <= 89999) return 'west_outer';
-      if (pc >= 87000 && pc <= 87033) return 'east_sabah';
+      // 彭亨州部分邮编 - 西马偏远
+      if (pc >= 39000 && pc <= 39200) return 'west_remote';
+      // 彭亨49000 - 西马偏远
+      if (pc === 49000) return 'west_remote';
+      // 彭亨69000 - 西马偏远
+      if (pc === 69000) return 'west_remote';
+      // 沙巴 (Sabah) - 东马
+      if (pc >= 87000 && pc <= 87033) return 'east_labuan';
       if (pc >= 88000 && pc <= 92999) return 'east_sabah';
+      // 砂捞越 (Sarawak) - 东马
       if (pc >= 93000 && pc <= 99999) return 'east_sarawak';
       return 'west_outer';
+    }
+    
+    // 判断是否纳闽岛/林梦/老越（海运小包特殊偏远）
+    function isParcelRemote(postcode) {
+      const pc = parseInt(postcode);
+      if (pc >= 87000 && pc <= 87033) return true; // 纳闽岛
+      if (pc >= 98700 && pc <= 98859) return true; // 林梦/老越
+      return false;
+    }
+    
+    // 西马偏远判定
+    function isWestRemote(postcode) {
+      const pc = parseInt(postcode);
+      // 玻璃市州 (Perlis)
+      if (pc >= 1000 && pc <= 2800) return true;
+      // 吉兰丹州 (Kelantan)
+      if (pc >= 15000 && pc <= 18500) return true;
+      // 登嘉楼州 (Terengganu)
+      if (pc >= 20000 && pc <= 24300) return true;
+      // 彭亨州 (Pahang)
+      if (pc >= 25000 && pc <= 28800) return true;
+      if (pc >= 39000 && pc <= 39200) return true;
+      if (pc === 49000) return true;
+      if (pc === 69000) return true;
+      return false;
+    }
+    
+    // 空运偏远邮编判定
+    function isAirRemote(postcode) {
+      const pc = parseInt(postcode);
+      return [44000, 45500, 45620, 45400, 44100, 42800, 45300, 43950].includes(pc);
     }
     
     // 空运DDP计算
@@ -1011,14 +1058,15 @@
       else unitPrice = rates.airSensitive;
       
       const totalCost = chargeWeight * unitPrice;
-      const isRemote = [44000, 45500, 45620, 45400, 44100, 42800, 45300, 43950].includes(parseInt(postcode));
+      const isRemote = isAirRemote(postcode);
+      const isHeavyRemote = totalWeight >= 45 && isRemote;
       
       return {
         method: '✈️ 空运DDP',
         volumeWeight: volumeWeight.toFixed(2),
         chargeWeight: chargeWeight.toFixed(2),
         unitPrice, totalCost: totalCost.toFixed(2),
-        note: isRemote ? '⚠️ 偏远邮编' : ''
+        note: isHeavyRemote ? '⚠️ 45kg+偏远大货，需安排当地商业快递派送' : ''
       };
     }
     
@@ -1038,7 +1086,7 @@
       if (region === 'west_inner') {
         unitPrice = isSensitive ? rates.seaWestInnerSensitive : rates.seaWestInnerNormal;
         minCBM = 0.3;
-      } else if (region === 'west_outer' || region === 'west_east') {
+      } else if (region === 'west_outer' || region === 'west_remote') {
         unitPrice = isSensitive ? rates.seaWestOuterSensitive : rates.seaWestOuterNormal;
         minCBM = 0.3;
       } else {
@@ -1051,13 +1099,103 @@
       
       const totalCost = finalVolume * unitPrice;
       
+      // 西马偏远附加费
+      let remoteSurcharge = 0;
+      let remoteNote = '';
+      if (isWestRemote(postcode)) {
+        const feeCBM = Math.ceil(finalVolume); // 不足1CBM按1CBM向上取整
+        remoteSurcharge = feeCBM * 80;
+        remoteNote = `偏远+¥${remoteSurcharge}(${feeCBM}CBM×80)`;
+      }
+      
+      // 东马沙巴各城市派件费
+      let sabahSurcharge = 0;
+      let sabahNote = '';
+      if (region === 'east_sabah' || region === 'east_labuan') {
+        const pc = parseInt(postcode);
+        const feeCBM = Math.ceil(finalVolume); // 向上取整到1CBM
+        
+        // 各城市单价
+        if (pc >= 88000 && pc <= 88499) { // 亚庇 KK
+          sabahSurcharge = 0;
+        } else if (pc >= 88500 && pc <= 88799) { // 斗亚蘭、担波罗利、打里卜
+          sabahSurcharge = feeCBM * 100;
+          sabahNote = `沙巴派送+¥${sabahSurcharge}(${feeCBM}CBM×100)`;
+        } else if ((pc >= 88800 && pc <= 88999) || (pc >= 89000 && pc <= 89999)) { // 兰腦、吧巴、保佛等
+          sabahSurcharge = feeCBM * 200;
+          sabahNote = `沙巴派送+¥${sabahSurcharge}(${feeCBM}CBM×200)`;
+        } else if (pc >= 90000 && pc <= 90999) { // 得律必、比鲁兰
+          sabahSurcharge = feeCBM * 240;
+          sabahNote = `沙巴派送+¥${sabahSurcharge}(${feeCBM}CBM×240)`;
+        } else if (pc >= 91000 && pc <= 91399) { // 仙本那
+          sabahSurcharge = feeCBM * 300;
+          sabahNote = `沙巴派送+¥${sabahSurcharge}(${feeCBM}CBM×300)`;
+        } else if (pc >= 91400 && pc <= 91999) { // 拿笃、斗湖
+          sabahSurcharge = feeCBM * 260;
+          sabahNote = `沙巴派送+¥${sabahSurcharge}(${feeCBM}CBM×260)`;
+        } else if (region === 'east_labuan') { // 纳闽岛
+          sabahSurcharge = feeCBM * 240 + 100;
+          sabahNote = `纳闽+¥${sabahSurcharge}(${feeCBM}CBM×240+100离岛费)`;
+        } else {
+          // 其他沙巴地区默认
+          sabahSurcharge = feeCBM * 200;
+          sabahNote = `沙巴派送+¥${sabahSurcharge}(${feeCBM}CBM×200)`;
+        }
+      }
+      
+      // 东马砂捞越各城市派件费
+      let sarawakSurcharge = 0;
+      let sarawakNote = '';
+      if (region === 'east_sarawak') {
+        const pc = parseInt(postcode);
+        const feeCBM = Math.ceil(finalVolume); // 向上取整到1CBM
+        
+        if (pc >= 96000 && pc <= 96999) { // 诗巫
+          sarawakSurcharge = 0;
+        } else if (pc >= 93000 && pc <= 93999) { // 古晋
+          sarawakSurcharge = feeCBM * 100;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×100)`;
+        } else if (pc >= 94000 && pc <= 94999) { // 泗里街、民丹俄
+          sarawakSurcharge = feeCBM * 100;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×100)`;
+        } else if (pc >= 97000 && pc <= 97999) { // 民都鲁
+          sarawakSurcharge = feeCBM * 100;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×100)`;
+        } else if (pc >= 98000 && pc <= 98499) { // 美里
+          sarawakSurcharge = feeCBM * 150;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×150)`;
+        } else if (pc >= 98500 && pc <= 98699) { // 沐胶
+          sarawakSurcharge = feeCBM * 150;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×150)`;
+        } else if (pc >= 98700 && pc <= 98859) { // 林梦、老越 - 无到门服务
+          sarawakNote = '⚠️ 无到门服务，需自提';
+        } else if (pc >= 96400 && pc <= 96599) { // 加帛
+          sarawakSurcharge = feeCBM * 180;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×180)`;
+        } else if (pc >= 98300 && pc <= 98399) { // 尼亚石山
+          sarawakSurcharge = feeCBM * 180;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×180)`;
+        } else if (pc >= 95000 && pc <= 95999) { // 砂拉卓、成班江、木中
+          sarawakSurcharge = feeCBM * 200;
+          sarawakNote = `砂捞越派送+¥${sabahSurcharge}(${feeCBM}CBM×200)`;
+        } else {
+          // 其他砂捞越地区
+          sarawakSurcharge = feeCBM * 100;
+          sarawakNote = `砂捞越派送+¥${sarawakSurcharge}(${feeCBM}CBM×100)`;
+        }
+      }
+      
+      const totalDelivery = remoteSurcharge + sabahSurcharge + sarawakSurcharge;
+      const deliveryNote = remoteNote || sabahNote || sarawakNote || '';
+      
       return {
         method: '🚢 海运大货',
         volume: volume.toFixed(4),
         finalVolume: finalVolume.toFixed(2),
         unitPrice, totalCost: totalCost.toFixed(2),
         isHeavy, heavyRatio: heavyRatio.toFixed(1),
-        note: isHeavy ? '⚠️ 重货' : ''
+        deliveryFee: totalDelivery.toFixed(2),
+        note: deliveryNote || (isHeavy ? '⚠️ 重货' : '')
       };
     }
     
@@ -1071,7 +1209,13 @@
       
       let unitPrice = region.startsWith('west') ? rates.parcelWest : rates.parcelEast;
       const totalCost = chargeWeight * unitPrice;
-      const remoteSurcharge = (region === 'east_sabah' || region === 'east_sarawak') ? 20 + (chargeWeight - 1) * 15 : 0;
+      
+      // 只对纳闽岛、林梦、老越加收偏远费
+      let remoteSurcharge = 0;
+      if (isParcelRemote(postcode)) {
+        remoteSurcharge = 20 + (Math.ceil(chargeWeight) - 1) * 15;
+      }
+      
       const finalCost = totalCost + remoteSurcharge;
       
       return {
@@ -1111,7 +1255,7 @@
       
       const totalItems = itemsPerBox * boxes;
       const airPerItem = parseFloat(airResult.totalCost) / totalItems;
-      const seaBulkPerItem = parseFloat(seaBulkResult.totalCost) / totalItems;
+      const seaBulkPerItem = (parseFloat(seaBulkResult.totalCost) + (parseFloat(seaBulkResult.deliveryFee) || 0)) / totalItems;
       const seaParcelPerItem = parseFloat(seaParcelResult.finalCost) / totalItems;
       const inlandPerItem = inlandFee / itemsPerBox;
       
@@ -1200,10 +1344,17 @@
     function displayResults(results) {
       const container = document.getElementById('resultCards');
       
-      container.innerHTML = results.map(r => `
+      container.innerHTML = results.map(r => {
+        // 计算最终费用（基础运费 + 派件费）
+        const baseCost = parseFloat(r.totalCost) || 0;
+        const deliveryFee = parseFloat(r.deliveryFee) || 0;
+        const remoteSurcharge = parseFloat(r.remoteSurcharge) || 0;
+        const finalDisplay = (baseCost + deliveryFee + remoteSurcharge).toFixed(2);
+        
+        return `
         <div class="result-card">
           <h3>${r.method}</h3>
-          <div class="price">¥${r.finalCost || r.totalCost}</div>
+          <div class="price">¥${finalDisplay}</div>
           <div class="detail">
             ${r.volumeWeight ? `体积重: ${r.volumeWeight}kg<br>` : ''}
             ${r.chargeWeight ? `计费重: ${r.chargeWeight}kg<br>` : ''}
@@ -1211,11 +1362,12 @@
             ${r.finalVolume ? `计费: ${r.finalVolume} CBM<br>` : ''}
             单价: ¥${r.unitPrice}<br>
             ${r.isHeavy ? `重货比: ${r.heavyRatio}<br>` : ''}
-            ${r.remoteSurcharge ? `偏远加费: ¥${r.remoteSurcharge}<br>` : ''}
+            ${deliveryFee > 0 ? `派件费: ¥${deliveryFee}<br>` : ''}
+            ${remoteSurcharge > 0 ? `偏远加费: ¥${remoteSurcharge}<br>` : ''}
             ${r.note ? `<span style="color:#ff9500">${r.note}</span>` : ''}
           </div>
         </div>
-      `).join('');
+      `}).join('');
       
       document.getElementById('resultSection').style.display = 'block';
     }
