@@ -153,7 +153,8 @@
     }
     .form-group { 
       display: flex; 
-      flex-direction: column; 
+      flex-direction: column;
+      min-width: 0;
     }
     .form-group.full-width {
       grid-column: 1 / -1;
@@ -166,6 +167,7 @@
       letter-spacing: -0.2px;
     }
     .form-group input, .form-group select { 
+      width: 100%;
       padding: 10px 12px; 
       background: rgba(255, 255, 255, 0.8);
       border: 0.5px solid rgba(0, 0, 0, 0.12);
@@ -173,6 +175,7 @@
       color: #1d1d1f; 
       font-size: 14px;
       font-family: inherit;
+      box-sizing: border-box;
       transition: all 0.2s ease;
       -webkit-appearance: none;
     }
