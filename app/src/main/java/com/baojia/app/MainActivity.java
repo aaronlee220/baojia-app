@@ -31,7 +31,7 @@ public class MainActivity extends Activity {
 
         webView = findViewById(R.id.webView);
         setupWebView();
-        webView.loadUrl("file:///android_asset/index.html");
+        webView.loadUrl("http://217.142.129.229:8805/");
     }
 
     private void setupWebView() {
@@ -61,6 +61,10 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 view.loadUrl(url);
                 return true;
+            }
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                view.loadUrl("file:///android_asset/index.html");
             }
         });
 
