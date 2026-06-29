@@ -59,6 +59,13 @@ public class MainActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                // 外部链接用系统浏览器打开
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(browserIntent);
+                    return true;
+                }
+                // 本地文件在WebView内加载
                 view.loadUrl(url);
                 return true;
             }
