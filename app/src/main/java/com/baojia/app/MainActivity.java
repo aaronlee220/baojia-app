@@ -59,8 +59,9 @@ public class MainActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // 外部链接用系统浏览器打开
-                if (url.startsWith("http://") || url.startsWith("https://")) {
+                // 只有外部链接才用系统浏览器，自己的页面留在WebView
+                if ((url.startsWith("http://") || url.startsWith("https://")) 
+                        && !url.startsWith("http://217.142.129.229:8805")) {
                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     startActivity(browserIntent);
                     return true;
