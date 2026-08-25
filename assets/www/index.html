@@ -1837,7 +1837,7 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
         code, name, price, box, length, width, height, weight, inland, profit, link, image
       };
       
-      products.push(newProduct);
+      products.unshift(newProduct);
       
       // 保存到服务器
       saveProductsToStorage();
