@@ -1817,7 +1817,7 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
       if (imageFile) {
         const formData = new FormData();
         formData.append('image', imageFile);
-        fetch('http://217.142.129.229:8805/api/upload-image', {method: 'POST', body: formData})
+        fetch('http://154.51.40.17:8806/api/upload-image', {method: 'POST', body: formData})
           .then(r => r.json())
           .then(d => {
             if (d.success) {
@@ -1926,7 +1926,7 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
       if (imageFile) {
         const formData = new FormData();
         formData.append('image', imageFile);
-        fetch('http://217.142.129.229:8805/api/upload-image', {method: 'POST', body: formData})
+        fetch('http://154.51.40.17:8806/api/upload-image', {method: 'POST', body: formData})
           .then(r => r.json())
           .then(d => {
             if (d.success) {
