@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>报价工具 - 电脑版</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1d1d1f;height:100vh;display:flex;flex-direction:column}
+    .topbar{background:#1e40af;color:white;padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
+    .topbar h1{font-size:18px;font-weight:600}
+    .topbar-btn{background:rgba(255,255,255,0.15);border:none;color:white;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px}
+    .topbar-btn:hover{background:rgba(255,255,255,0.25)}
+    .main{display:flex;flex:1;overflow:hidden}
+    .sidebar{width:300px;background:white;border-right:1px solid #e5e7eb;display:flex;flex-direction:column}
+    .sidebar-header{padding:14px 16px;border-bottom:1px solid #e5e7eb}
+    .sidebar-header h2{font-size:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+    .search-box{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none}
+    .search-box:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
+    .product-list{flex:1;overflow-y:auto}
+    .product-item{display:flex;align-items:center;padding:10px 12px;border-bottom:0.5px solid #e5e7eb;cursor:pointer;transition:background 0.15s}
+    .product-item:hover{background:#f9fafb}
+    .product-item.active{background:#eff6ff;border-left:3px solid #3b82f6}
+    .product-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;background:#f3f4f6;margin-right:10px;flex-shrink:0;cursor:pointer}
+    .product-info{flex:1;min-width:0}
+    .product-code{font-size:11px;color:#3b82f6;font-weight:600}
+    .product-name{font-size:13px;font-weight:500;color:#1d1d1f;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .product-meta{font-size:12px;color:#6b7280;display:flex;gap:8px}
+    .product-actions{display:flex;gap:4px;flex-shrink:0}
+    .product-actions button,.product-actions a{padding:3px 6px;font-size:11px;border:none;border-radius:4px;cursor:pointer;text-decoration:none}
+    .btn-link{background:#eff6ff;color:#3b82f6}
+    .btn-edit{background:#f3f4f6;color:#374151}
+    .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .quotation-area{flex:1;padding:20px;overflow-y:auto}
+    .section-card{background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+    .section-title{font-size:15px;font-weight:600;margin-bottom:14px;color:#1e40af;display:flex;align-items:center;gap:6px}
+    .form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .form-group{display:flex;flex-direction:column}
+    .form-group label{font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:500}
+    .form-group input,.form-group select{padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none}
+    .form-group input:focus,.form-group select:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
+    .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .result-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center}
+    .result-card .title{font-size:13px;color:#64748b;margin-bottom:6px}
+    .result-card .price-myr{font-size:14px;color:#94a3b8}
+    .result-card .price-rmb{font-size:22px;font-weight:700;color:#dc2626}
+    .result-card .unit{font-size:12px;color:#64748b}
+    .btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s}
+    .btn-primary{background:#1e40af;color:white}.btn-primary:hover{background:#1e3a8a}
+    .btn-success{background:#0f766e;color:white}.btn-success:hover{background:#0d5c52}
+    .btn-copy{background:#0f766e;color:white;padding:6px 14px;font-size:12px}
+    .btn-copy-blue{background:#1e40af;color:white;padding:6px 14px;font-size:12px}
+    .btn-sm{padding:6px 14px;font-size:12px;border:none;border-radius:6px;cursor:pointer}
+    .btn-row{display:flex;gap:10px;margin-top:14px}
+    .collapse-toggle{cursor:pointer;user-select:none}
+    .collapse-toggle:hover{opacity:0.8}
+    .collapse-arrow{font-size:12px;transition:transform 0.2s;display:inline-block}
+    .collapse-arrow.open{transform:rotate(90deg)}
+    .collapse-body{display:none;margin-top:12px}
+    .collapse-body.show{display:block}
+    .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center}
+    .modal-overlay.show{display:flex}
+    .modal-box{background:white;border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+    .modal-title{font-size:16px;font-weight:600;margin-bottom:16px}
+    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .img-upload{border:2px dashed #d1d5db;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s}
+    .img-upload:hover{border-color:#3b82f6}
+    .img-upload img{max-width:100%;max-height:120px;border-radius:6px;margin-top:8px}
+    /* 图片放大弹窗 */
+    .lightbox{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center;cursor:pointer}
+    .lightbox.show{display:flex}
+    .lightbox img{max-width:90%;max-height:90%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📋 报价工具 - 电脑版</h1>
+  <div style="display:flex;gap:12px;align-items:center">
+    <span style="font-size:12px;opacity:0.8">数据同步自手机版</span>
+    <button class="topbar-btn" onclick="loadProducts()">🔄 刷新</button>
+  </div>
+</div>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2><span>📦 产品列表</span><button class="btn-sm btn-success" onclick="showAddProduct()" style="padding:4px 10px;font-size:11px">+ 添加</button></h2>
+      <input type="text" class="search-box" id="searchBox" placeholder="搜索产品名称/编号..." oninput="filterProducts()">
+    </div>
+    <div class="product-list" id="productList"></div>
+  </div>
+  <div class="content">
+    <div class="quotation-area">
+      <div class="section-card">
+        <div class="section-title collapse-toggle" onclick="toggleSettings()"><span class="collapse-arrow" id="settingsArrow">▶</span> ⚙️ 运费单价设置</div>
+        <div class="collapse-body" id="settingsBody">
+          <div class="form-grid" style="grid-template-columns:repeat(6,1fr)">
+            <div class="form-group"><label>空运普货 ¥/KG</label><input type="number" id="airNormal" value="20.5" step="0.1"></div>
+            <div class="form-group"><label>空运带电 ¥/KG</label><input type="number" id="airBattery" value="29" step="0.1"></div>
+            <div class="form-group"><label>空运敏感 ¥/KG</label><input type="number" id="airSensitive" value="30" step="0.1"></div>
+            <div class="form-group"><label>海运内坡 ¥/CBM</label><input type="number" id="seaWestInnerNormal" value="650" step="10"></div>
+            <div class="form-group"><label>海运外坡 ¥/CBM</label><input type="number" id="seaWestOuterNormal" value="670" step="10"></div>
+            <div class="form-group"><label>海运东马 ¥/CBM</label><input type="number" id="seaEastNormal" value="980" step="10"></div>
+            <div class="form-group"><label>小包西马 ¥/KG</label><input type="number" id="parcelWest" value="5.5" step="0.1"></div>
+            <div class="form-group"><label>小包东马 ¥/KG</label><input type="number" id="parcelEast" value="10" step="0.1"></div>
+            <div class="form-group"><label>敏感内坡 ¥/CBM</label><input type="number" id="seaWestInnerSensitive" value="670" step="10"></div>
+            <div class="form-group"><label>敏感外坡 ¥/CBM</label><input type="number" id="seaWestOuterSensitive" value="690" step="10"></div>
+            <div class="form-group"><label>敏感东马 ¥/CBM</label><input type="number" id="seaEastSensitive" value="1080" step="10"></div>
+            <div class="form-group"><label>汇率 1MYR=?RMB</label><input type="number" id="exchangeRate" value="1.64" step="0.01"></div>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="saveRates()">保存设置</button><button class="btn-sm" onclick="resetRates()" style="background:#f3f4f6">恢复默认</button></div>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">📦 产品信息</div>
+        <div class="form-grid">
+          <div class="form-group"><label>产品编号</label><input type="text" id="productCode" readonly style="background:#f9fafb"></div>
+          <div class="form-group"><label>产品名称</label><input type="text" id="productName" readonly style="background:#f9fafb"></div>
+          <div class="form-group"><label>采购价格 (RMB/件)</label><input type="number" id="purchasePrice" step="0.01"></div>
+          <div class="form-group"><label>内陆费 (RMB/箱)</label><input type="number" id="inlandFee" step="0.01"></div>
+          <div class="form-group"><label>装箱数 (个/箱)</label><input type="number" id="itemsPerBox"></div>
+          <div class="form-group"><label>利润率 (%)</label><input type="number" id="profitRate" value="25"></div>
+          <div class="form-group"><label>箱数</label><input type="number" id="boxes" value="1" min="1"></div>
+          <div class="form-group"><label>货物属性</label><select id="goodsType"><option value="normal">普货</option><option value="battery">带电</option><option value="sensitive">敏感</option></select></div>
+          <div class="form-group"><label>长 (cm)</label><input type="number" id="length" step="0.1"></div>
+          <div class="form-group"><label>宽 (cm)</label><input type="number" id="width" step="0.1"></div>
+          <div class="form-group"><label>高 (cm)</label><input type="number" id="height" step="0.1"></div>
+          <div class="form-group"><label>重量 (kg/箱)</label><input type="number" id="actualWeight" step="0.1"></div>
+          <div class="form-group"><label>目的邮编</label><input type="text" id="postcode" placeholder="如: 50000"></div>
+          <div class="form-group" style="grid-column:span 3"><button class="btn btn-primary" onclick="calculate()" style="width:100%">🔍 计算报价</button></div>
+        </div>
+      </div>
+      <div class="section-card" id="resultSection" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="section-title" style="margin-bottom:0">🔥 报价（含利润）</div><button class="btn-copy" onclick="copyQuotation('quotation')">📋 复制</button></div>
+        <div class="result-grid" id="quotationCards"></div>
+      </div>
+      <div class="section-card" id="minResultSection" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="section-title" style="margin-bottom:0">📦 成本价（不含利润）</div><button class="btn-copy-blue" onclick="copyQuotation('minQuotation')">📋 复制</button></div>
+        <div class="result-grid" id="minQuotationCards"></div>
+      </div>
+      
+      <div class="section-card" id="perItemSection" style="display:none">
+        <div class="section-title">🎯 单件商品运费</div>
+        <div class="result-grid" id="perItemCards"></div>
+      </div>
+      
+      <div class="section-card" id="freightResultSection" style="display:none">
+        <div class="section-title">📊 运费计算结果</div>
+        <div class="result-grid" id="freightResultCards"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 添加产品弹窗 -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <div class="modal-title">➕ 添加新产品</div>
+    <div class="modal-grid">
+      <div class="form-group"><label>产品编号</label><input type="text" id="newCode"></div>
+      <div class="form-group"><label>产品名称</label><input type="text" id="newName"></div>
+      <div class="form-group"><label>采购价格</label><input type="number" id="newPrice" step="0.01"></div>
+      <div class="form-group"><label>装箱数</label><input type="number" id="newBox"></div>
+      <div class="form-group"><label>长(cm)</label><input type="number" id="newLength" step="0.1"></div>
+      <div class="form-group"><label>宽(cm)</label><input type="number" id="newWidth" step="0.1"></div>
+      <div class="form-group"><label>高(cm)</label><input type="number" id="newHeight" step="0.1"></div>
+      <div class="form-group"><label>重量(kg)</label><input type="number" id="newWeight" step="0.1"></div>
+      <div class="form-group"><label>内陆费</label><input type="number" id="newInland" step="0.01"></div>
+      <div class="form-group"><label>利润率(%)</label><input type="number" id="newProfit" value="25"></div>
+      <div class="form-group" style="grid-column:span 2"><label>货源链接</label><input type="text" id="newLink" placeholder="https://..."></div>
+      <div class="form-group" style="grid-column:span 2"><label>产品图片</label>
+        <div class="img-upload" onclick="document.getElementById('newImageFile').click()">
+          <div style="color:#9ca3af;font-size:13px">📷 点击上传图片</div>
+          <img id="newImagePreview" style="display:none">
+          <input type="file" id="newImageFile" accept="image/*" style="display:none" onchange="previewNewImage(this)">
+        </div>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="addProduct()">保存</button><button class="btn-sm" onclick="hideAddProduct()" style="background:#f3f4f6">取消</button></div>
+  </div>
+</div>
+
+<!-- 编辑产品弹窗 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ 编辑产品</div>
+    <div class="modal-grid">
+      <div class="form-group"><label>产品编号</label><input type="text" id="editCode" readonly style="background:#f9fafb"></div>
+      <div class="form-group"><label>产品名称</label><input type="text" id="editName"></div>
+      <div class="form-group"><label>采购价格</label><input type="number" id="editPrice" step="0.01"></div>
+      <div class="form-group"><label>装箱数</label><input type="number" id="editBox"></div>
+      <div class="form-group"><label>长(cm)</label><input type="number" id="editLength" step="0.1"></div>
+      <div class="form-group"><label>宽(cm)</label><input type="number" id="editWidth" step="0.1"></div>
+      <div class="form-group"><label>高(cm)</label><input type="number" id="editHeight" step="0.1"></div>
+      <div class="form-group"><label>重量(kg)</label><input type="number" id="editWeight" step="0.1"></div>
+      <div class="form-group"><label>内陆费</label><input type="number" id="editInland" step="0.01"></div>
+      <div class="form-group"><label>利润率(%)</label><input type="number" id="editProfit"></div>
+      <div class="form-group" style="grid-column:span 2"><label>货源链接</label><input type="text" id="editLink"></div>
+      <div class="form-group" style="grid-column:span 2"><label>产品图片</label>
+        <div class="img-upload" onclick="document.getElementById('editImageFile').click()">
+          <div style="color:#9ca3af;font-size:13px">📷 点击更换图片</div>
+          <img id="editImagePreview" style="display:none">
+          <input type="file" id="editImageFile" accept="image/*" style="display:none" onchange="previewEditImage(this)">
+        </div>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="saveEdit()">保存修改</button><button class="btn-sm" onclick="hideEditProduct()" style="background:#f3f4f6">取消</button></div>
+  </div>
+</div>
+
+<!-- 图片放大弹窗 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()"><img id="lightboxImg" src=""></div>
+
+<script src="/desktop/products_loader.js"></script>
+<script>
+var products=PRODUCTS_DATA||[],currentProductCode='',currentProductName='';
+var defaultRates={airNormal:20.5,airBattery:29,airSensitive:30,seaWestInnerNormal:650,seaWestInnerSensitive:670,seaWestOuterNormal:670,seaWestOuterSensitive:690,seaEastNormal:980,seaEastSensitive:1080,parcelWest:5.5,parcelEast:10,exchangeRate:1.64};
+window.onload=function(){loadRates();renderProductList(products)};
+
+// 图片放大
+function showLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('show')}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
+
+// 折叠设置
+function toggleSettings(){var b=document.getElementById('settingsBody'),a=document.getElementById('settingsArrow');b.classList.toggle('show');a.classList.toggle('open')}
+
+// 产品列表
+function renderProductList(list){
+  var c=document.getElementById('productList');
+  if(!list.length){c.innerHTML='<div style="text-align:center;padding:40px;color:#9ca3af"><p>📦 无匹配产品</p></div>';return}
+  c.innerHTML=list.map(function(p){
+    var img='images/'+(p.image||'').replace('images/','');
+    var linkHtml=p.link?'<a href="'+p.link+'" target="_blank" class="btn-link" title="1688链接" onclick="event.stopPropagation()">🔗</a>':'';
+    return '<div class="product-item" onclick="selectProduct(\''+p.code+'\')">'+
+      '<img class="product-thumb" src="'+img+'" onerror="this.style.display=\'none\'" onclick="event.stopPropagation();showLightbox(\''+img+'\')">'+
+      '<div class="product-info"><div class="product-code">'+p.code+'</div>'+
+      '<div class="product-name">'+p.name+'</div>'+
+      '<div class="product-meta"><span>¥'+p.price+'</span><span>'+p.box+'个/箱</span></div></div>'+
+      '<div class="product-actions">'+linkHtml+
+      '<button class="btn-edit" onclick="event.stopPropagation();editProduct(\''+p.code+'\')">编辑</button>' +
+      '<button class="btn-delete" style="background:#fee2e2;color:#dc2626" onclick="event.stopPropagation();deleteProduct(\''+p.code+'\')">删除</button></div></div>'
+  }).join('')
+}
+function filterProducts(){var q=document.getElementById('searchBox').value.toLowerCase();renderProductList(products.filter(function(p){return p.code.toLowerCase().indexOf(q)>=0||p.name.toLowerCase().indexOf(q)>=0}))}
+function selectProduct(code){
+  var p=products.find(function(x){return x.code===code});if(!p)return;
+  currentProductCode=code;currentProductName=p.name;
+  document.getElementById('productCode').value=p.code;
+  document.getElementById('productName').value=p.name;
+  document.getElementById('purchasePrice').value=p.price;
+  document.getElementById('itemsPerBox').value=p.box;
+  document.getElementById('length').value=p.length;
+  document.getElementById('width').value=p.width;
+  document.getElementById('height').value=p.height;
+  document.getElementById('actualWeight').value=p.weight;
+  document.getElementById('inlandFee').value=p.inland||0;
+  document.getElementById('profitRate').value=p.profit||25;
+  document.querySelectorAll('.product-item').forEach(function(el){el.classList.remove('active')});
+  event.currentTarget.classList.add('active')
+}
+// 运费设置
+function getRates(){var r={};Object.keys(defaultRates).forEach(function(k){r[k]=parseFloat(document.getElementById(k).value)||defaultRates[k]});return r}
+function saveRates(){var r={};Object.keys(defaultRates).forEach(function(k){r[k]=parseFloat(document.getElementById(k).value)});localStorage.setItem('shippingRates',JSON.stringify(r));alert('运费设置已保存！')}
+function resetRates(){if(confirm('确定恢复默认？')){localStorage.removeItem('shippingRates');Object.keys(defaultRates).forEach(function(k){document.getElementById(k).value=defaultRates[k]})}}
+function loadRates(){var s=localStorage.getItem('shippingRates');if(s){var r=JSON.parse(s);Object.keys(r).forEach(function(k){var el=document.getElementById(k);if(el)el.value=r[k]})}}
+// 图片预览
+function previewNewImage(input){if(input.files&&input.files[0]){var r=new FileReader();r.onload=function(e){var img=document.getElementById('newImagePreview');img.src=e.target.result;img.style.display='block'};r.readAsDataURL(input.files[0])}}
+function previewEditImage(input){if(input.files&&input.files[0]){var r=new FileReader();r.onload=function(e){var img=document.getElementById('editImagePreview');img.src=e.target.result;img.style.display='block'};r.readAsDataURL(input.files[0])}}
+// 添加产品
+function showAddProduct(){document.getElementById('addModal').classList.add('show');document.getElementById('newImagePreview').style.display='none'}
+function hideAddProduct(){document.getElementById('addModal').classList.remove('show')}
+function addProduct(){
+  var code=document.getElementById('newCode').value.trim();
+  var name=document.getElementById('newName').value.trim();
+  if(!code||!name){alert('请填写编号和名称');return}
+  if(products.some(function(p){return p.code===code})){alert('编号已存在');return}
+  var imgFile=document.getElementById('newImageFile').files[0];
+  var imgData='';
+  if(imgFile){var reader=new FileReader();reader.onload=function(e){imgData=e.target.result;saveNewProduct(code,name,imgData)};reader.readAsDataURL(imgFile)}else{saveNewProduct(code,name,'')}
+}
+function saveNewProduct(code,name,imgData){
+  var p={code:code,name:name,price:parseFloat(document.getElementById('newPrice').value)||0,box:parseInt(document.getElementById('newBox').value)||1,
+    length:parseFloat(document.getElementById('newLength').value)||0,width:parseFloat(document.getElementById('newWidth').value)||0,
+    height:parseFloat(document.getElementById('newHeight').value)||0,weight:parseFloat(document.getElementById('newWeight').value)||0,
+    inland:parseFloat(document.getElementById('newInland').value)||0,profit:parseFloat(document.getElementById('newProfit').value)||25,
+    link:document.getElementById('newLink').value.trim(),image:imgData};
+  products.unshift(p);saveToAPI(p);renderProductList(products);hideAddProduct();alert('产品添加成功！')
+}
+// 编辑产品
+var editingCode=null;
+function editProduct(code){
+  var p=products.find(function(x){return x.code===code});if(!p)return;
+  editingCode=code;
+  document.getElementById('editCode').value=p.code;
+  document.getElementById('editName').value=p.name;
+  document.getElementById('editPrice').value=p.price;
+  document.getElementById('editBox').value=p.box;
+  document.getElementById('editLength').value=p.length;
+  document.getElementById('editWidth').value=p.width;
+  document.getElementById('editHeight').value=p.height;
+  document.getElementById('editWeight').value=p.weight;
+  document.getElementById('editInland').value=p.inland||0;
+  document.getElementById('editProfit').value=p.profit||25;
+  document.getElementById('editLink').value=p.link||'';
+  var preview=document.getElementById('editImagePreview');
+  if(p.image){preview.src=p.image;preview.style.display='block'}else{preview.style.display='none'}
+  document.getElementById('editModal').classList.add('show')
+}
+function hideEditProduct(){document.getElementById('editModal').classList.remove('show');editingCode=null;document.getElementById('editImageFile').value=''}
+function saveEdit(){
+  if(!editingCode)return;
+  var p=products.find(function(x){return x.code===editingCode});if(!p)return;
+  p.name=document.getElementById('editName').value;
+  p.price=parseFloat(document.getElementById('editPrice').value)||0;
+  p.box=parseInt(document.getElementById('editBox').value)||1;
+  p.length=parseFloat(document.getElementById('editLength').value)||0;
+  p.width=parseFloat(document.getElementById('editWidth').value)||0;
+  p.height=parseFloat(document.getElementById('editHeight').value)||0;
+  p.weight=parseFloat(document.getElementById('editWeight').value)||0;
+  p.inland=parseFloat(document.getElementById('editInland').value)||0;
+  p.profit=parseFloat(document.getElementById('editProfit').value)||25;
+  p.link=document.getElementById('editLink').value.trim();
+  var imgFile=document.getElementById('editImageFile').files[0];
+  if(imgFile){var reader=new FileReader();reader.onload=function(e){p.image=e.target.result;updateToAPI(editingCode, p);renderProductList(products);hideEditProduct();alert('修改成功！')};reader.readAsDataURL(imgFile)}else{updateToAPI(editingCode, p);renderProductList(products);hideEditProduct();alert('修改成功！')}
+}
+// 运费计算
+function getRegion(pc){var p=parseInt(pc);if(p>=1000&&p<=2800)return'west_remote';if(p>=4000&&p<=8999)return'west_inner';if(p>=10000&&p<=14999)return'west_outer';if(p>=15000&&p<=18500)return'west_remote';if(p>=20000&&p<=28800)return'west_remote';if(p>=30000&&p<=49999)return'west_outer';if(p>=39000&&p<=39200)return'west_remote';if(p===49000||p===69000)return'west_remote';if(p>=87000&&p<=87033)return'east_labuan';if(p>=88000&&p<=92999)return'east_sabah';if(p>=93000&&p<=99999)return'east_sarawak';return'west_outer'}
+function isParcelRemote(pc){var p=parseInt(pc);return(p>=87000&&p<=87033)||(p>=98700&&p<=98859)}
+function isWestRemote(pc){var p=parseInt(pc);return(p>=1000&&p<=2800)||(p>=15000&&p<=18500)||(p>=20000&&p<=24300)||(p>=25000&&p<=28800)||(p>=39000&&p<=39200)||p===49000||p===69000}
+function isAirRemote(pc){return[44000,45500,45620,45400,44100,42800,45300,43950].indexOf(parseInt(pc))>=0}
+function calculateAir(l,w,h,weight,boxes,postcode,goodsType){var rates=getRates(),volW=(l*w*h)/6000*boxes,totW=weight*boxes;var cw=volW>totW?(totW+volW)/2:totW;cw=Math.max(cw,11);var up=goodsType==='normal'?rates.airNormal:goodsType==='battery'?rates.airBattery:rates.airSensitive;return{totalCost:(cw*up).toFixed(2),chargeWeight:cw.toFixed(2),unitPrice:up}}
+function calculateSeaBulk(l,w,h,weight,boxes,postcode,goodsType){var rates=getRates(),vol=(l*w*h)/1000000*boxes,totW=weight*boxes;var region=getRegion(postcode),isS=goodsType==='sensitive';var up,minCBM;if(region==='west_inner'){up=isS?rates.seaWestInnerSensitive:rates.seaWestInnerNormal;minCBM=0.3}else if(region==='west_outer'||region==='west_remote'){up=isS?rates.seaWestOuterSensitive:rates.seaWestOuterNormal;minCBM=0.3}else{up=isS?rates.seaEastSensitive:rates.seaEastNormal;minCBM=0.5}var fv=Math.max(totW/500>vol?totW/500:vol,minCBM);fv=region.indexOf('west')===0?Math.ceil(fv*100)/100:Math.ceil(fv*10)/10;var delivery=0;if(isWestRemote(postcode)){var cb=Math.ceil(fv);delivery=cb*80}if(region==='east_sabah'||region==='east_labuan'){var pc=parseInt(postcode),cb=Math.ceil(fv);if(pc>=88500&&pc<=88799)delivery=cb*100;else if(pc>=88800&&pc<=89999)delivery=cb*200;else if(pc>=90000&&pc<=90999)delivery=cb*240;else if(pc>=91000&&pc<=91399)delivery=cb*300;else if(pc>=91400&&pc<=91999)delivery=cb*260;else if(region==='east_labuan')delivery=cb*240+100;else if(pc>=88000&&pc<=88499)delivery=0;else delivery=cb*200}if(region==='east_sarawak'){var pc=parseInt(postcode),cb=Math.ceil(fv);if(pc>=96000&&pc<=96999)delivery=0;else if(pc>=93000&&pc<=93999)delivery=cb*100;else if(pc>=94000&&pc<=94999)delivery=cb*100;else if(pc>=97000&&pc<=97999)delivery=cb*100;else if(pc>=98000&&pc<=98499)delivery=cb*150;else if(pc>=98500&&pc<=98699)delivery=cb*150;else if(pc>=96400&&pc<=96599)delivery=cb*180;else if(pc>=98300&&pc<=98399)delivery=cb*180;else if(pc>=95000&&pc<=95999)delivery=cb*200;else delivery=cb*100}return{totalCost:(fv*up).toFixed(2),deliveryFee:delivery.toFixed(2),finalVolume:fv.toFixed(2),unitPrice:up,isHeavy:totW/500>vol,heavyRatio:totW/fv.toFixed(1),note:delivery>0?'含偏远/派件费 ¥'+delivery:''}}
+function calculateSeaParcel(l,w,h,weight,boxes,postcode,goodsType){var rates=getRates(),volW=(l*w*h)/6000*boxes,totW=weight*boxes;var region=getRegion(postcode),cw=Math.max(totW,volW,11);var up=region.indexOf('west')===0?rates.parcelWest:rates.parcelEast;var cost=cw*up;if(isParcelRemote(postcode))cost+=20+(Math.ceil(cw)-1)*15;return{finalCost:cost.toFixed(2),chargeWeight:cw.toFixed(2)}}
+function calculate(){var l=parseFloat(document.getElementById('length').value),w=parseFloat(document.getElementById('width').value);var h=parseFloat(document.getElementById('height').value),weight=parseFloat(document.getElementById('actualWeight').value);var boxes=parseInt(document.getElementById('boxes').value),postcode=document.getElementById('postcode').value;var goodsType=document.getElementById('goodsType').value;var purchasePrice=parseFloat(document.getElementById('purchasePrice').value)||0;var inlandFee=parseFloat(document.getElementById('inlandFee').value)||0;var itemsPerBox=parseInt(document.getElementById('itemsPerBox').value)||1;var profitRate=parseFloat(document.getElementById('profitRate').value)||0;if(!l||!w||!h||!weight||!boxes){alert('请填写完整的尺寸和重量');return}var air=calculateAir(l,w,h,weight,boxes,postcode,goodsType);var seaBulk=calculateSeaBulk(l,w,h,weight,boxes,postcode,goodsType);var seaParcel=calculateSeaParcel(l,w,h,weight,boxes,postcode,goodsType);var totalItems=itemsPerBox*boxes,inlandPerItem=inlandFee/itemsPerBox;var airPerItem=parseFloat(air.totalCost)/totalItems;var seaBulkPerItem=(parseFloat(seaBulk.totalCost)+parseFloat(seaBulk.deliveryFee))/totalItems;var seaParcelPerItem=parseFloat(seaParcel.finalCost)/totalItems;var pm=1+(profitRate/100);var airQ=(purchasePrice+inlandPerItem+airPerItem)*pm;var seaBulkQ=(purchasePrice+inlandPerItem+seaBulkPerItem)*pm;var seaParcelQ=(purchasePrice+inlandPerItem+seaParcelPerItem)*pm;var base=(purchasePrice+inlandPerItem)*pm;var airMin=base+airPerItem,seaBulkMin=base+seaBulkPerItem,seaParcelMin=base+seaParcelPerItem;var er=parseFloat(document.getElementById('exchangeRate').value)||1.64;document.getElementById('resultSection').style.display='block';document.getElementById('quotationCards').innerHTML='<div class="result-card"><div class="title">✈️ 空运DDP</div><div class="price-rmb" style="font-size:24px;font-weight:700;color:#dc2626">RM'+(airQ/er).toFixed(2)+'</div><div class="price-myr" style="font-size:14px;color:#64748b">¥'+airQ.toFixed(2)+'</div><div class="unit">/个</div></div>'+'<div class="result-card"><div class="title">🚢 海运大货</div><div class="price-rmb" style="font-size:24px;font-weight:700;color:#dc2626">RM'+(seaBulkQ/er).toFixed(2)+'</div><div class="price-myr" style="font-size:14px;color:#64748b">¥'+seaBulkQ.toFixed(2)+'</div><div class="unit">/个</div></div>'+'<div class="result-card"><div class="title">📦 海运小包</div><div class="price-rmb" style="font-size:24px;font-weight:700;color:#dc2626">RM'+(seaParcelQ/er).toFixed(2)+'</div><div class="price-myr" style="font-size:14px;color:#64748b">¥'+seaParcelQ.toFixed(2)+'</div><div class="unit">/个</div></div>';document.getElementById('minResultSection').style.display='block';document.getElementById('minQuotationCards').innerHTML='<div class="result-card"><div class="title">✈️ 空运DDP</div><div class="price-rmb" style="font-size:24px;font-weight:700;color:#dc2626">RM'+(airMin/er).toFixed(2)+'</div><div class="price-myr" style="font-size:14px;color:#64748b">¥'+airMin.toFixed(2)+'</div><div class="unit">/个</div></div>'+'<div class="result-card"><div class="title">🚢 海运大货</div><div class="price-rmb" style="font-size:24px;font-weight:700;color:#dc2626">RM'+(seaBulkMin/er).toFixed(2)+'</div><div class="price-myr" style="font-size:14px;color:#64748b">¥'+seaBulkMin.toFixed(2)+'</div><div class="unit">/个</div></div>'+'<div class="result-card"><div class="title">📦 海运小包</div><div class="price-rmb" style="font-size:24px;font-weight:700;color:#dc2626">RM'+(seaParcelMin/er).toFixed(2)+'</div><div class="price-myr" style="font-size:14px;color:#64748b">¥'+seaParcelMin.toFixed(2)+'</div><div class="unit">/个</div></div>';document.getElementById('perItemSection').style.display='block';document.getElementById('perItemCards').innerHTML='<div class="result-card"><div class="title">✈️ 空运DDP</div><div class="price-rmb">¥'+airPerItem.toFixed(2)+'</div><div class="unit">/个</div></div>'+'<div class="result-card"><div class="title">🚢 海运大货</div><div class="price-rmb">¥'+seaBulkPerItem.toFixed(2)+'</div><div class="unit">/个</div></div>'+'<div class="result-card"><div class="title">📦 海运小包</div><div class="price-rmb">¥'+seaParcelPerItem.toFixed(2)+'</div><div class="unit">/个</div></div>';document.getElementById('freightResultSection').style.display='block';document.getElementById('freightResultCards').innerHTML='<div class="result-card" style="text-align:left"><div style="font-weight:600;color:#1e40af;margin-bottom:6px">✈️ 空运DDP</div><div style="font-size:12px;color:#64748b;line-height:1.8">计费重: '+air.chargeWeight+'KG<br>单价: ¥'+air.unitPrice+'/KG<br>体积重: '+air.volumeWeight+'KG</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:11px;color:#94a3b8">整批运费</span><br><span style="font-size:18px;font-weight:700;color:#dc2626">RM'+(air.totalCost/er).toFixed(2)+'</span> <span style="font-size:13px;color:#64748b">¥'+air.totalCost+'</span></div></div>'+'<div class="result-card" style="text-align:left"><div style="font-weight:600;color:#1e40af;margin-bottom:6px">🚢 海运大货</div><div style="font-size:12px;color:#64748b;line-height:1.8">计费体积: '+seaBulk.finalVolume+'CBM<br>单价: ¥'+seaBulk.unitPrice+'/CBM<br>'+(seaBulk.isHeavy?'⚠️ 重货 ('+seaBulk.heavyRatio+'KG/CBM)':'')+'</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:11px;color:#94a3b8">整批运费</span><br><span style="font-size:18px;font-weight:700;color:#dc2626">RM'+((seaBulk.totalCost+seaBulk.deliveryFee)/er).toFixed(2)+'</span> <span style="font-size:13px;color:#64748b">¥'+(seaBulk.totalCost+seaBulk.deliveryFee)+'</span>'+(seaBulk.note?'<br><span style="font-size:11px;color:#d97706">'+seaBulk.note+'</span>':'')+'</div></div>'+'<div class="result-card" style="text-align:left"><div style="font-weight:600;color:#1e40af;margin-bottom:6px">📦 海运小包</div><div style="font-size:12px;color:#64748b;line-height:1.8">计费重: '+seaParcel.chargeWeight+'KG<br>单价: ¥'+seaParcel.unitPrice+'/KG</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0"><span style="font-size:11px;color:#94a3b8">整批运费</span><br><span style="font-size:18px;font-weight:700;color:#dc2626">RM'+(seaParcel.finalCost/er).toFixed(2)+'</span> <span style="font-size:13px;color:#64748b">¥'+seaParcel.finalCost+'</span>'+(seaParcel.remoteSurcharge>0?'<br><span style="font-size:11px;color:#d97706">偏远费 ¥'+seaParcel.remoteSurcharge+'</span>':'')+'</div></div>'}
+function copyQuotation(type){var spec='',cards,tag;if(type==='quotation'){var p=products.find(function(x){return x.code===currentProductCode});spec=p?p.length+'×'+p.width+'×'+p.height+'cm / '+p.weight+'kg / '+p.box+'个/箱':'';cards=document.getElementById('quotationCards').querySelectorAll('.result-card');tag='报价：'}else{var p=products.find(function(x){return x.code===currentProductCode});spec=p?p.length+'×'+p.width+'×'+p.height+'cm / '+p.weight+'kg / '+p.box+'个/箱':'';cards=document.getElementById('minQuotationCards').querySelectorAll('.result-card');tag='成本价：'}var text=currentProductName+' '+currentProductCode+'\n'+spec+'\n'+tag;cards.forEach(function(c){text+='\n'+c.querySelector('.title').textContent+' '+c.querySelector('.price-rmb').textContent+'/个 '+c.querySelector('.price-myr').textContent});var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('已复制到剪贴板！')}
+function deleteProduct(code) {
+  if (!confirm('确定要删除这个产品吗？')) return;
+  deleteFromAPI(code);
+  products = products.filter(function(p) { return p.code !== code; });
+  renderProductList(products);
+  alert('产品已删除！');
+}
+function loadProducts(){loadCustomProducts();renderProductList(products);alert('数据已刷新！')}
+
+// API 同步函数
+function saveToAPI(product) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'http://154.51.40.17:8806/api/products', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      console.log('产品已同步到服务器');
+    }
+  };
+  xhr.send(JSON.stringify(product));
+}
+
+function updateToAPI(code, product) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', 'http://154.51.40.17:8806/api/products/' + code, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      console.log('产品已同步到服务器');
+    }
+  };
+  xhr.send(JSON.stringify(product));
+}
+
+function deleteFromAPI(code) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('DELETE', 'http://154.51.40.17:8806/api/products/' + code, true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      console.log('产品已从服务器删除');
+    }
+  };
+  xhr.send();
+}
+</script>
+</body>
+</html>

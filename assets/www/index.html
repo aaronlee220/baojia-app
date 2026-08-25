@@ -1597,7 +1597,7 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
     let products = [];
     
     function loadProductsFromStorage() {
-      // 先从服务器API加载最新数据
+      // 始终从服务器API加载最新数据
       fetch('http://154.51.40.17:8806/api/products')
         .then(r => r.json())
         .then(data => {
@@ -1606,22 +1606,26 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
             renderProductList(products);
             console.log('从服务器加载了 ' + products.length + ' 个产品');
           } else {
-            // 降级：用打包的数据
-            loadFromBundledData();
+            loadLocalFallback();
           }
         })
-        .catch(() => {
-          // 网络失败：用打包的数据
-          loadFromBundledData();
+        .catch(e => {
+          console.error('服务器加载失败:', e);
+          loadLocalFallback();
         });
     }
     
-    function loadFromBundledData() {
-      if (typeof PRODUCTS_DATA !== 'undefined') {
-        const deleted = JSON.parse(localStorage.getItem('deleted_products') || '[]');
-        products = PRODUCTS_DATA.filter(p => !deleted.includes(p.code));
+    function loadLocalFallback() {
+      // 从localStorage读取（电脑版新增的会在这里）
+      const local = localStorage.getItem('baojia_products');
+      if (local) {
+        products = JSON.parse(local);
         renderProductList(products);
-        console.log('从本地加载了 ' + products.length + ' 个产品');
+        console.log('从本地存储加载了 ' + products.length + ' 个产品');
+      } else if (typeof PRODUCTS_DATA !== 'undefined') {
+        products = PRODUCTS_DATA;
+        renderProductList(products);
+        console.log('从打包数据加载了 ' + products.length + ' 个产品');
       }
     }
     
