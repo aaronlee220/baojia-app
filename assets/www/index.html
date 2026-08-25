@@ -1626,11 +1626,17 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
     }
     
     function saveProductsToStorage() {
-      // Save to server
+      // Save entire array to localStorage for offline backup
+      localStorage.setItem('baojia_products', JSON.stringify(products));
+      console.log('产品已保存到本地存储');
+    }
+    
+    function saveSingleProduct(product) {
+      // Save single product to server
       fetch('http://154.51.40.17:8806/api/products', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({products: products})
+        body: JSON.stringify(product)
       }).then(r => r.json()).then(d => {
         if (!d.success) console.error('Save failed:', d.error);
       }).catch(e => console.error('Save error:', e));
@@ -1840,7 +1846,7 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
       products.unshift(newProduct);
       
       // 保存到服务器
-      saveProductsToStorage();
+      saveSingleProduct(newProduct);
       
       // 重新渲染
       renderProductList(products);
