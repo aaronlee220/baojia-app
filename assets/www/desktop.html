@@ -214,7 +214,17 @@
 <script>
 var products=PRODUCTS_DATA||[],currentProductCode='',currentProductName='';
 var defaultRates={airNormal:20.5,airBattery:29,airSensitive:30,seaWestInnerNormal:650,seaWestInnerSensitive:670,seaWestOuterNormal:670,seaWestOuterSensitive:690,seaEastNormal:980,seaEastSensitive:1080,parcelWest:5.5,parcelEast:10,exchangeRate:1.64};
-window.onload=function(){loadRates();renderProductList(products)};
+window.onload=function(){
+  loadRates();
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://154.51.40.17:8806/api/products', false);
+  xhr.send();
+  if (xhr.status === 200) {
+    var data = JSON.parse(xhr.responseText);
+    products = data.products || [];
+  }
+  renderProductList(products);
+};
 
 // 图片放大
 function showLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('show')}
@@ -339,7 +349,17 @@ function deleteProduct(code) {
   renderProductList(products);
   alert('产品已删除！');
 }
-function loadProducts(){loadCustomProducts();renderProductList(products);alert('数据已刷新！')}
+function loadProducts(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://154.51.40.17:8806/api/products', false);
+  xhr.send();
+  if (xhr.status === 200) {
+    var data = JSON.parse(xhr.responseText);
+    products = data.products || [];
+  }
+  renderProductList(products);
+  alert('数据已刷新！共 ' + products.length + ' 个产品');
+}
 
 // API 同步函数
 function saveToAPI(product) {
