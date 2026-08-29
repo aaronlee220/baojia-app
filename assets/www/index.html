@@ -1632,6 +1632,17 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
       console.log('产品已保存到本地存储');
     }
     
+    function updateSingleProduct(product) {
+      // 更新产品到服务器（编辑用）
+      fetch('http://154.51.40.17:8806/api/products/' + encodeURIComponent(product.code), {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(product)
+      }).then(r => r.json()).then(d => {
+        if (!d.ok) console.error('更新失败:', d);
+      }).catch(e => console.error('更新错误:', e));
+    }
+    
     function saveSingleProduct(product) {
       // Save single product to server
       fetch('http://154.51.40.17:8806/api/products', {
@@ -1746,6 +1757,11 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
     
     function deleteProduct(code) {
       if (!confirm('确定删除产品 ' + code + ' 吗？')) return;
+      
+      // 同步删除到服务器
+      fetch('http://154.51.40.17:8806/api/products/' + encodeURIComponent(code), {
+        method: 'DELETE'
+      }).catch(e => console.error('删除错误:', e));
       
       products = products.filter(p => p.code !== code);
       saveProductsToStorage();
@@ -1949,6 +1965,8 @@ function closeLightbox(){document.getElementById("lightbox").classList.remove("s
     
     function finishEdit() {
       // Save to server
+      const edited = products.find(p => p.code === editingProductCode);
+      if (edited) updateSingleProduct(edited);
       saveProductsToStorage();
       
       renderProductList(products);
