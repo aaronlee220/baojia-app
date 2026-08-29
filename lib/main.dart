@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,18 +32,13 @@ class WebViewScreen extends StatefulWidget {
 }
 
 class _WebViewScreenState extends State<WebViewScreen> {
-  late final WebViewController _controller;
+  InAppWebViewController? _webViewController;
   bool _isLoading = true;
+  final PullToRefreshController? _pullToRefreshController = null;
 
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (_) => setState(() => _isLoading = false),
-      ))
-      ..loadFlutterAsset('assets/www/index.html');
   }
 
   @override
@@ -52,7 +47,24 @@ class _WebViewScreenState extends State<WebViewScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            WebViewWidget(controller: _controller),
+            InAppWebView(
+              initialFile: "assets/www/index.html",
+              initialSettings: InAppWebViewSettings(
+                javaScriptEnabled: true,
+                domStorageEnabled: true,
+                databaseEnabled: true,
+                mediaPlaybackRequiresUserGesture: false,
+                allowsInlineMediaPlayback: true,
+                useOnDownloadStart: true,
+                supportMultipleWindows: false,
+              ),
+              onWebViewCreated: (controller) {
+                _webViewController = controller;
+              },
+              onLoadStop: (controller, url) {
+                setState(() => _isLoading = false);
+              },
+            ),
             if (_isLoading)
               const Center(child: CircularProgressIndicator()),
           ],
